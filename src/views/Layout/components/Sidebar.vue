@@ -19,9 +19,6 @@
           <span class="w-5 text-center">📄</span><span>Paper Summary</span>
         </a>
         <a href="#" class="p-3 hover:bg-indigo-600 rounded-lg flex items-center space-x-3 transition-all">
-          <span class="w-5 text-center">💬</span><span>Contextual Q&A</span>
-        </a>
-        <a href="#" class="p-3 hover:bg-indigo-600 rounded-lg flex items-center space-x-3 transition-all">
           <span class="w-5 text-center">🔖</span><span>Bibliography</span>
         </a>
         <a href="#" class="p-3 hover:bg-indigo-600 rounded-lg flex items-center space-x-3 transition-all">

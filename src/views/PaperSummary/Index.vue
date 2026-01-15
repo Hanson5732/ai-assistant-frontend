@@ -7,7 +7,7 @@
         <p class="text-gray-500 text-sm">Upload papers to generate summaries and citations using DeepSeek API.</p>
       </header>
 
-      <FileUpload :hasFile="hasFile" />
+      <FileUpload @file-selected="handleFileUpload" />
 
       <SummaryPanel :loading="loading" />
 
@@ -21,12 +21,12 @@
 
 <script setup>
 import { ref } from 'vue'
+// import { processPaper } from '@/apis/paper'
 import FileUpload from './components/FileUpload.vue'
 import SummaryPanel from './components/SummaryPanel.vue'
 import ChatPanel from './components/ChatPanel.vue'
 import ExportPanel from './components/ExportPanel.vue'
 
-const hasFile = ref(true)
 const loading = ref(false)
 </script>
 
