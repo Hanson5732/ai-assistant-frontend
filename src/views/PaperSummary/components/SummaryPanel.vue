@@ -14,8 +14,15 @@
         </select>
 
         <button 
+          v-if="!summaryData && !loading && !showRefresh && showGenerate"
+          @click="handleGenerate(file, selectedSize)"
+          class="text-xs bg-indigo-600 text-white px-3 py-1.5 rounded-md hover:bg-indigo-700 transition-colors font-medium"
+        >
+          Generate
+        </button>
+        <button 
           v-if="!loading && summary && showRefresh"
-          @click="handleRefresh"
+          @click="handleRefresh(file, selectedSize)"
           class="p-1 hover:bg-gray-200 rounded-full transition-colors text-gray-500"
           title="Regenerate summary"
         >
@@ -91,26 +98,36 @@
 
 <script setup>
 import { defineProps, defineEmits, ref, watch, computed } from 'vue'
+import { processPaper } from '@/apis/paper'
 
 const props = defineProps({
   loading: Boolean,
   summary: [String, Object],
   selectedSize: {
-    type: String,
+    type: String, 
     default: 'medium'
+  },
+  file: {
+    type: [File, Object],
+    required: true
+  },
+  sessionId: {
+    type: String,
+    required: true
   }
 })
 
-const emit = defineEmits(['update:size'])
+const emit = defineEmits(['update:size', 'refresh', 'generate'])
 
 const showRefresh = ref(true)
+const showGenerate = ref(true)
 const summaryData = computed(() => {
   if (!props.summary) return null
   if (typeof props.summary === 'object') return props.summary
   try {
     return JSON.parse(props.summary)
   } catch (e) {
-    return null // 如果流式传输尚未完成，解析失败则暂不显示
+    return null
   }
 })
 
@@ -119,8 +136,38 @@ watch(() => props.loading, (val) => {
   else if (summaryData.value) showRefresh.value = true
 })
 
-const handleRefresh = () => {
+const handleGenerate = (file, selectedSize) => {
+  showGenerate.value = false
+  processPaper(file, selectedSize, 'null', (chunk) => {
+    if (chunk.startsWith('{')) {
+      try {
+        summaryData.value = JSON.parse(chunk)
+        showRefresh.value = true
+      } catch (error) {
+        console.error('Failed to parse JSON chunk:', error)
+      }
+    }
+  }).catch(error => {
+    console.error('Process paper failed:', error)
+  })
+  emit('generate')
+}
+
+const handleRefresh = (file, selectedSize) => {
   showRefresh.value = false
+  processPaper(file, selectedSize, 'null', (chunk) => {
+    if (chunk.startsWith('{')) {
+      try {
+        summaryData.value = JSON.parse(chunk)
+        showRefresh.value = true
+      } catch (error) {
+        console.error('Failed to parse JSON chunk:', error)
+      }
+    }
+  }).catch(error => {
+    console.error('Process paper failed:', error)
+    showRefresh.value = true
+  })
   emit('refresh')
 }
 </script>

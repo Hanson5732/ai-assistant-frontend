@@ -2,12 +2,14 @@
  * 流式处理接口
  * @param {*} file 
  * @param {*} size 
+ * @param {*} sessionId 
  * @param {*} onMessage 
  */
-export const processPaper = async (file, size = 'medium', onMessage) => {
+export const processPaper = async (file, size = 'medium', sessionId, onMessage) => {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('size', size);
+    formData.append('sessionId', sessionId || 'null');
 
     const response = await fetch('/api/process-paper', {
         method: 'POST',
@@ -15,7 +17,7 @@ export const processPaper = async (file, size = 'medium', onMessage) => {
     });
 
     if (!response.ok) {
-        throw new Error('网络响应错误');
+        throw new Error('Network response error');
     }
 
     // 获取可读流读取器

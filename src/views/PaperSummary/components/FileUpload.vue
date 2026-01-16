@@ -21,7 +21,7 @@
     
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
       <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Active Document</h3>
-      <div v-if="pdfFile" class="flex items-start space-x-3">
+      <div v-if="pdfFile.name" class="flex items-start space-x-3">
         <div class="p-2 bg-red-100 text-red-600 rounded-lg font-bold text-xs">PDF</div>
         <div class="overflow-hidden">
           <p class="text-sm font-semibold text-gray-700 truncate">{{ pdfFile.name }}</p>
@@ -35,11 +35,11 @@
 </template>
 
 <script setup>
-import { ref, defineEmits } from 'vue'
+import { ref, reactive, defineEmits } from 'vue'
 
-const emit = defineEmits(['file-selected'])
+const emit = defineEmits(['upload'])
 const fileInput = ref(null)
-const pdfFile = ref({
+const pdfFile = reactive({
   name: '',
   size: '',
   date: ''
@@ -63,17 +63,19 @@ const formatBytes = (bytes, decimals = 1) => {
 const onFileChange = (e) => {
   const file = e.target.files[0]
   if (file) {
-    pdfFile.value.name = file.name
-    pdfFile.value.size = formatBytes(file.size)
+    pdfFile.name = file.name
+    pdfFile.size = formatBytes(file.size)
     const options = { month: 'short', day: 'numeric' }
-    pdfFile.value.date = new Date().toLocaleDateString('en-US', options)
-    emit('file-selected', file)
+    pdfFile.date = new Date().toLocaleDateString('en-US', options)
+    emit('upload', file)
   }
 }
 
 const removeFile = () => {
-  pdfFile.value = ''
+  pdfFile.name = ''
+  pdfFile.size = ''
+  pdfFile.date = ''
   fileInput.value.value = null
-  emit('file-selected', null)
+  emit('upload', null)
 }
 </script>
