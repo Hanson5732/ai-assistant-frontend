@@ -14,22 +14,19 @@
         </select>
 
         <button 
-          v-if="!summaryData && !loading && !showRefresh && showGenerate"
+          v-if="!summaryData"
           @click="handleGenerate(file, selectedSize)"
-          class="text-xs bg-indigo-600 text-white px-3 py-1.5 rounded-md hover:bg-indigo-700 transition-colors font-medium"
+          :disabled="loading || !file"
+          class="text-xs px-3 py-1.5 rounded-md transition-colors font-medium"
+          :class="[
+            (loading || !file) 
+              ? 'bg-gray-300 cursor-not-allowed text-gray-500' 
+              : 'bg-indigo-600 text-white hover:bg-indigo-700'
+          ]"
         >
-          Generate
+          {{ loading ? 'Generating...' : 'Generate' }}
         </button>
-        <button 
-          v-if="!loading && summary && showRefresh"
-          @click="handleRefresh(file, selectedSize)"
-          class="p-1 hover:bg-gray-200 rounded-full transition-colors text-gray-500"
-          title="Regenerate summary"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-        </button>
+        
       </div>
     </div>
 
@@ -97,8 +94,7 @@
 </template>
 
 <script setup>
-import { defineProps, defineEmits, ref, watch, computed } from 'vue'
-import { processPaper } from '@/apis/paper'
+import { defineProps, defineEmits, computed } from 'vue'
 
 const props = defineProps({
   loading: Boolean,
@@ -109,7 +105,7 @@ const props = defineProps({
   },
   file: {
     type: [File, Object],
-    required: true
+    default: null
   },
   sessionId: {
     type: String,
@@ -117,10 +113,9 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['update:size', 'refresh', 'generate'])
+const emit = defineEmits(['update:size', 'generate'])
 
-const showRefresh = ref(true)
-const showGenerate = ref(true)
+// 解析摘要数据的计算属性
 const summaryData = computed(() => {
   if (!props.summary) return null
   if (typeof props.summary === 'object') return props.summary
@@ -131,43 +126,8 @@ const summaryData = computed(() => {
   }
 })
 
-watch(() => props.loading, (val) => {
-  if (val) showRefresh.value = false
-  else if (summaryData.value) showRefresh.value = true
-})
-
-const handleGenerate = (file, selectedSize) => {
-  showGenerate.value = false
-  processPaper(file, selectedSize, 'null', (chunk) => {
-    if (chunk.startsWith('{')) {
-      try {
-        summaryData.value = JSON.parse(chunk)
-        showRefresh.value = true
-      } catch (error) {
-        console.error('Failed to parse JSON chunk:', error)
-      }
-    }
-  }).catch(error => {
-    console.error('Process paper failed:', error)
-  })
+const handleGenerate = () => {
+  if (!props.file || props.loading) return
   emit('generate')
-}
-
-const handleRefresh = (file, selectedSize) => {
-  showRefresh.value = false
-  processPaper(file, selectedSize, 'null', (chunk) => {
-    if (chunk.startsWith('{')) {
-      try {
-        summaryData.value = JSON.parse(chunk)
-        showRefresh.value = true
-      } catch (error) {
-        console.error('Failed to parse JSON chunk:', error)
-      }
-    }
-  }).catch(error => {
-    console.error('Process paper failed:', error)
-    showRefresh.value = true
-  })
-  emit('refresh')
 }
 </script>

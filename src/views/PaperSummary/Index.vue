@@ -16,7 +16,6 @@
         :file="selectedFile"
         :sessionId="sessionId"
         @generate="handleGenerate"
-        @refresh="handleRefresh"
         @update:size="s => selectedSize = s"
       />
 
@@ -30,7 +29,7 @@
 
 <script setup>
 import { ref } from 'vue'
-// import { processPaper } from '@/apis/paper'
+import { processPaper } from '@/apis/paper'
 import FileUpload from './components/FileUpload.vue'
 import SummaryPanel from './components/SummaryPanel.vue'
 import ChatPanel from './components/ChatPanel.vue'
@@ -44,19 +43,33 @@ const selectedSize = ref('medium')
 
 const handleFileUpload = (file) => {
   selectedFile.value = file
-  sessionId.value = Date.now().toString()
+  summary.value = ''
+  loading.value = false
 }
 
-const handleGenerate = () => {
-  // 这里应该调用实际的API处理逻辑
+
+const handleGenerate = async () => {
+  if (!selectedFile.value || loading.value) return
+  
   loading.value = true
-  // 处理完成后设置loading为false
+  summary.value = ''
+  
+  try {
+    await processPaper(
+      selectedFile.value, 
+      selectedSize.value, 
+      sessionId.value, 
+      (chunk) => {
+        summary.value = chunk 
+      }
+    )
+  } catch (error) {
+    console.error('Error:', error)
+  } finally {
+    loading.value = false
+  }
 }
 
-const handleRefresh = () => {
-  // 重新生成摘要的逻辑
-  handleGenerate()
-}
 </script>
 
 <style>
