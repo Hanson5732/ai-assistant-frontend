@@ -1,13 +1,8 @@
 <template>
   <main class="flex-1 p-4 md:p-8 overflow-y-auto">
     <div class="max-w-5xl mx-auto space-y-6">
-        
-      <header class="mb-8">
-        <h2 class="text-2xl font-bold text-gray-800">Research Workspace</h2>
-        <p class="text-gray-500 text-sm">Upload papers to generate summaries and citations using DeepSeek API.</p>
-      </header>
 
-      <FileUpload @file-selected="handleFileUpload" />
+      <FileUpload @upload="handleFileUpload" />
 
       <SummaryPanel 
         :loading="loading"
@@ -19,7 +14,7 @@
         @update:size="s => selectedSize = s"
       />
 
-      <ChatPanel />
+      <ChatPanel :sessionId="sessionId" />
 
       <ExportPanel />
 
@@ -60,7 +55,16 @@ const handleGenerate = async () => {
       selectedSize.value, 
       sessionId.value, 
       (chunk) => {
-        summary.value = chunk 
+        // 1. 提取 SESSION_ID (如果 chunk 包含它)
+        if (chunk.includes('SESSION_ID:')) {
+          const match = chunk.match(/SESSION_ID:([\w-]+)/)
+          if (match) sessionId.value = match[1]
+          // 移除 SESSION_ID 部分，剩下的可能是 JSON 内容
+          chunk = chunk.replace(/SESSION_ID:[\w-]+\n?/, '')
+        }
+        
+        // 2. 累加内容
+        summary.value += chunk
       }
     )
   } catch (error) {

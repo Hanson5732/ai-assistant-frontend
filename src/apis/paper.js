@@ -35,3 +35,24 @@ export const processPaper = async (file, size = 'medium', sessionId, onMessage) 
         }
     }
 }
+
+
+export const chatWithPaper = async (message, sessionId, onMessage) => {
+    const response = await fetch('/api/chat-stream', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message, sessionId }),
+    });
+
+    if (!response.ok) throw new Error('Chat request failed');
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+
+    while (true) {  // eslint-disable-line no-constant-condition
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value, { stream: true });
+        if (onMessage) onMessage(chunk);
+    }
+}

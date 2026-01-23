@@ -122,6 +122,14 @@ const summaryData = computed(() => {
   try {
     return JSON.parse(props.summary)
   } catch (e) {
+    const jsonMatch = props.summary.match(/```json\s*([\s\S]*?)\s*```/)
+    if (jsonMatch && jsonMatch[1]) {
+      try {
+        return JSON.parse(jsonMatch[1])
+      } catch (innerError) {
+        return null
+      }
+    }
     return null
   }
 })
