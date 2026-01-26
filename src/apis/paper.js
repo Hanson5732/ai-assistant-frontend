@@ -36,7 +36,12 @@ export const processPaper = async (file, size = 'medium', sessionId, onMessage) 
     }
 }
 
-
+/**
+ * 与论文进行聊天
+ * @param {*} message 
+ * @param {*} sessionId 
+ * @param {*} onMessage 
+ */
 export const chatWithPaper = async (message, sessionId, onMessage) => {
     const response = await fetch('/api/chat-stream', {
         method: 'POST',
@@ -55,4 +60,15 @@ export const chatWithPaper = async (message, sessionId, onMessage) => {
         const chunk = decoder.decode(value, { stream: true });
         if (onMessage) onMessage(chunk);
     }
+}
+
+/**
+ * 获取历史聊天记录
+ * @param {*} sessionId 
+ * @returns 
+ */
+export const getHistory = async (sessionId) => {
+    const response = await fetch(`/api/chat/session/${sessionId}`);
+    if (!response.ok) throw new Error('Failed to fetch history');
+    return await response.json();
 }

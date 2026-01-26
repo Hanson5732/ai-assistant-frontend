@@ -1,7 +1,7 @@
 <template>
   <div class="bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col h-[500px]">
     <div class="p-4 border-b flex justify-between items-center bg-gray-50 rounded-t-xl">
-      <h3 class="font-bold text-gray-700 font-serif italic text-lg">DeepSeek Summary</h3>
+      <h3 class="font-bold text-gray-700 font-serif text-lg">DeepSeek Summary</h3>
       <div class="flex items-center space-x-2">
         <select 
           :value="selectedSize" 
@@ -14,8 +14,8 @@
         </select>
 
         <button 
-          v-if="!summaryData"
-          @click="handleGenerate(file, selectedSize)"
+          v-if="!summary"
+          @click="handleGenerate"
           :disabled="loading || !file"
           class="text-xs px-3 py-1.5 rounded-md transition-colors font-medium"
           :class="[
@@ -26,7 +26,6 @@
         >
           {{ loading ? 'Generating...' : 'Generate' }}
         </button>
-        
       </div>
     </div>
 
@@ -36,54 +35,8 @@
         <p class="text-gray-400">Processing abstractive summary via DeepSeek...</p>
       </div>
 
-      <div v-else-if="summaryData" class="space-y-8">
-        <section>
-          <h4 class="flex items-center font-bold text-indigo-900 mb-2 uppercase tracking-wider text-xs">
-            <span class="w-1 h-4 bg-indigo-600 mr-2 rounded"></span> Abstract
-          </h4>
-          <p class="bg-indigo-50/50 p-3 rounded-lg border border-indigo-100 italic">
-            {{ summaryData.abstract }}
-          </p>
-        </section>
-
-        <section>
-          <h4 class="flex items-center font-bold text-indigo-900 mb-2 uppercase tracking-wider text-xs">
-            <span class="w-1 h-4 bg-indigo-600 mr-2 rounded"></span> Detailed Breakdown
-          </h4>
-          <div class="grid gap-4">
-            <div v-for="(content, key) in summaryData.structured_breakdown" :key="key" class="border-l-2 border-gray-100 pl-4">
-              <p class="font-semibold text-gray-800 capitalize mb-1">{{ key }}</p>
-              <p class="text-gray-600 text-xs leading-normal">{{ content }}</p>
-            </div>
-          </div>
-        </section>
-
-        <section>
-          <h4 class="flex items-center font-bold text-indigo-900 mb-2 uppercase tracking-wider text-xs">
-            <span class="w-1 h-4 bg-indigo-600 mr-2 rounded"></span> Terminology
-          </h4>
-          <div class="flex flex-wrap gap-2">
-            <div v-for="item in summaryData.key_term" :key="item.term" class="group relative">
-              <span class="px-2 py-1 bg-white border border-gray-200 rounded text-xs cursor-help hover:border-indigo-400 hover:text-indigo-600 transition-colors">
-                {{ item.term }}
-              </span>
-              <div class="absolute bottom-full left-0 mb-2 w-64 p-2 bg-gray-800 text-white text-[10px] rounded shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-10">
-                {{ item.definition }}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section>
-          <h4 class="flex items-center font-bold text-indigo-900 mb-2 uppercase tracking-wider text-xs">
-            <span class="w-1 h-4 bg-indigo-600 mr-2 rounded"></span> Logical Relations
-          </h4>
-          <ul class="space-y-1">
-            <li v-for="(relation, index) in summaryData.knowledge_graph" :key="index" class="text-xs text-gray-500 font-mono">
-              <span class="text-indigo-400 mr-2">#</span> {{ relation }}
-            </li>
-          </ul>
-        </section>
+      <div v-else-if="summary" class="markdown-body">
+        <div v-html="renderedHtml" class="prose prose-sm prose-indigo max-w-none"></div>
       </div>
 
       <div v-else class="flex items-center justify-center h-full text-gray-400 italic">
@@ -95,10 +48,18 @@
 
 <script setup>
 import { defineProps, defineEmits, computed } from 'vue'
+import MarkdownIt from 'markdown-it'
+
+// 初始化 Markdown 解析器
+const md = new MarkdownIt({
+  html: true,
+  linkify: true,
+  typographer: true
+})
 
 const props = defineProps({
   loading: Boolean,
-  summary: [String, Object],
+  summary: String, // 直接接收后端的 Markdown 字符串内容
   selectedSize: {
     type: String, 
     default: 'medium'
@@ -115,23 +76,10 @@ const props = defineProps({
 
 const emit = defineEmits(['update:size', 'generate'])
 
-// 解析摘要数据的计算属性
-const summaryData = computed(() => {
-  if (!props.summary) return null
-  if (typeof props.summary === 'object') return props.summary
-  try {
-    return JSON.parse(props.summary)
-  } catch (e) {
-    const jsonMatch = props.summary.match(/```json\s*([\s\S]*?)\s*```/)
-    if (jsonMatch && jsonMatch[1]) {
-      try {
-        return JSON.parse(jsonMatch[1])
-      } catch (innerError) {
-        return null
-      }
-    }
-    return null
-  }
+// 直接将 summary 字符串渲染为 HTML
+const renderedHtml = computed(() => {
+  if (!props.summary) return ''
+  return md.render(props.summary)
 })
 
 const handleGenerate = () => {
@@ -139,3 +87,30 @@ const handleGenerate = () => {
   emit('generate')
 }
 </script>
+
+<style scoped>
+/* 样式穿透：确保渲染出的 Markdown 标签有基本样式 */
+.markdown-body :deep(h1), 
+.markdown-body :deep(h2), 
+.markdown-body :deep(h3) {
+  font-weight: 700;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+  color: #1e1b4b; /* text-indigo-950 */
+}
+.markdown-body :deep(p) {
+  margin-bottom: 0.75rem;
+}
+.markdown-body :deep(ul) {
+  list-style-type: disc;
+  padding-left: 1.25rem;
+  margin-bottom: 0.75rem;
+}
+.markdown-body :deep(li) {
+  margin-bottom: 0.25rem;
+}
+.markdown-body :deep(strong) {
+  font-weight: 700;
+  color: #4338ca; /* text-indigo-700 */
+}
+</style>

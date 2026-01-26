@@ -1,12 +1,18 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import PaperSummary from '@/views/PaperSummary/index.vue';
 import Layout from '@/views/Layout/index.vue';
+import FileUpload from '@/views/FileUpload/index.vue';
 
 const routes = [
   {
-    path: '/', component: Layout,
+    path: '/', 
+    redirect: '/chat'
+  },
+  {
+    path: '/chat', component: Layout,
     children: [
-        { path: '', component: PaperSummary },
+        { path: '', component: FileUpload },
+        { path: ':sessionId', component: PaperSummary }
     ]
   }
 ];
