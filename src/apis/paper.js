@@ -1,3 +1,5 @@
+import request from '@/utils/request'
+
 /**
  * 流式处理接口
  * @param {*} file 
@@ -67,8 +69,9 @@ export const chatWithPaper = async (message, sessionId, onMessage) => {
  * @param {*} sessionId 
  * @returns 
  */
-export const getHistory = async (sessionId) => {
-    const response = await fetch(`/api/chat/session/${sessionId}`);
-    if (!response.ok) throw new Error('Failed to fetch history');
-    return await response.json();
+export const getSessionDetail = (sessionId) => {
+  return request({
+    url: `/api/chat/session/${sessionId}`,
+    method: 'GET'
+  })
 }

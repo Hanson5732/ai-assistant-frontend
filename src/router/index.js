@@ -11,8 +11,8 @@ const routes = [
   {
     path: '/chat', component: Layout,
     children: [
-        { path: '', component: FileUpload },
-        { path: ':sessionId', component: PaperSummary }
+        { path: '', name: 'ChatHome', component: FileUpload },
+        { path: ':sessionId', name: 'PaperDetail', component: PaperSummary }
     ]
   }
 ];

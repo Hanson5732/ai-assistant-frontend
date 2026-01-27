@@ -2,9 +2,6 @@
   <div class="bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col h-[550px]">
     <div class="p-3 border-b bg-gray-50 flex justify-between items-center">
       <h3 class="font-bold text-gray-700 text-sm">Contextual Q&A</h3>
-      <span v-if="sessionId" class="text-[10px] bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded">
-        Active Session: {{ sessionId.substring(0, 8) }}
-      </span>
     </div>
 
     <div ref="chatContainer" class="flex-1 overflow-y-auto p-4 space-y-4">

@@ -2,31 +2,6 @@
   <div class="bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col h-[500px]">
     <div class="p-4 border-b flex justify-between items-center bg-gray-50 rounded-t-xl">
       <h3 class="font-bold text-gray-700 font-serif text-lg">DeepSeek Summary</h3>
-      <div class="flex items-center space-x-2">
-        <select 
-          :value="selectedSize" 
-          @change="$emit('update:size', $event.target.value)"
-          class="text-xs border rounded-md px-2 py-1 bg-white focus:ring-1 focus:ring-indigo-500"
-        >
-          <option value="small">Short (100 words)</option>
-          <option value="medium">Standard (200 words)</option>
-          <option value="large">Detailed Breakdown</option>
-        </select>
-
-        <button 
-          v-if="!summary"
-          @click="handleGenerate"
-          :disabled="loading || !file"
-          class="text-xs px-3 py-1.5 rounded-md transition-colors font-medium"
-          :class="[
-            (loading || !file) 
-              ? 'bg-gray-300 cursor-not-allowed text-gray-500' 
-              : 'bg-indigo-600 text-white hover:bg-indigo-700'
-          ]"
-        >
-          {{ loading ? 'Generating...' : 'Generate' }}
-        </button>
-      </div>
     </div>
 
     <div class="p-6 overflow-y-auto text-sm text-gray-700 leading-relaxed scrollbar-thin">
@@ -47,7 +22,7 @@
 </template>
 
 <script setup>
-import { defineProps, defineEmits, computed } from 'vue'
+import { defineProps, computed } from 'vue'
 import MarkdownIt from 'markdown-it'
 
 // 初始化 Markdown 解析器
@@ -74,18 +49,11 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['update:size', 'generate'])
-
 // 直接将 summary 字符串渲染为 HTML
 const renderedHtml = computed(() => {
   if (!props.summary) return ''
   return md.render(props.summary)
 })
-
-const handleGenerate = () => {
-  if (!props.file || props.loading) return
-  emit('generate')
-}
 </script>
 
 <style scoped>
