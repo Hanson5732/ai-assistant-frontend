@@ -1,49 +1,55 @@
 <template>
-  <main class="flex-1 p-4 md:p-8 overflow-y-auto">
+  <main class="flex-1 p-4 md:p-8 overflow-y-auto bg-gray-50">
     <div class="max-w-5xl mx-auto space-y-6">
       
-      <div v-if="paperTitle" class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-        <h1 class="text-2xl font-serif font-bold text-indigo-950">
-          <span class="text-indigo-600 mr-2">📚</span> {{ paperTitle }}
-        </h1>
-      </div>
+      <transition name="fade">
+        <div v-if="paperTitle" class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm border-l-4 border-l-indigo-600">
+          <h1 class="text-2xl font-serif font-bold text-indigo-950 leading-tight">
+            {{ paperTitle }}
+          </h1>
+        </div>
+      </transition>
 
       <SummaryPanel 
         :loading="loading"
-        :summary="displaySummary" 
+        :summary="rawSummary"
+        :selectedSize="selectedSize"
         :file="selectedFile"
         :sessionId="sessionId"
+        @generate="handleGenerate"
+        @update:size="s => selectedSize = s"
       />
 
-      <ChatPanel v-if="sessionId" :sessionId="sessionId" />
+      <ChatPanel 
+        v-if="sessionId && sessionId !== 'new'" 
+        :sessionId="sessionId" 
+        :messages="messages"
+      />
+
     </div>
   </main>
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { processPaper, getSessionDetail } from '@/apis/paper'
+import { getSessionDetail, processPaper } from '@/apis/paper'
 import SummaryPanel from './components/SummaryPanel.vue'
 import ChatPanel from './components/ChatPanel.vue'
 
 const route = useRoute()
-
 const loading = ref(false)
 const selectedFile = ref(null)
-const sessionId = ref('')
-const rawSummary = ref('') 
-const paperTitle = ref('') 
+const sessionId = ref(route.params.sessionId)
+const rawSummary = ref('')
+const paperTitle = ref('')
 const selectedSize = ref('medium')
 
-const displaySummary = computed(() => {
-  return rawSummary.value.replace(/^Title:\s*.*\n?/, '').trim()
-})
-
+// 加载/刷新数据的逻辑
 const loadData = async () => {
   const sId = route.params.sessionId
   
-  // 场景 A：从上传页跳转过来的新文件 (sId 为 'new' 且 state 中有 file)
+  // 场景 A：新上传文件跳转
   if (sId === 'new' && history.state?.file) {
     selectedFile.value = history.state.file
     selectedSize.value = history.state.size || 'medium'
@@ -51,72 +57,77 @@ const loadData = async () => {
     return
   }
 
-  // 场景 B：点击侧边栏或直接刷新页面 (sId 是具体的 ID)
+  // 场景 B：查询具体会话记录
   if (sId && sId !== 'new') {
-    sessionId.value = sId
     try {
       loading.value = true
       const res = await getSessionDetail(sId)
-      // 假设返回数据结构包含 title 和 summary
-      paperTitle.value = res.data.title
-      rawSummary.value = res.data.summary
+      if (res.data.code === 1) {
+        // 匹配你提供的后端结构
+        paperTitle.value = res.data.data.title
+        rawSummary.value = res.data.data.summary
+        sessionId.value = sId
+        rawSummary.value = rawSummary.value.replace(/^Title:\s*.*\n?/, '').trim()
+      }
     } catch (error) {
-      //
+      console.error('Failed to fetch session detail:', error)
     } finally {
       loading.value = false
     }
   }
 }
 
-watch(() => route.params.sessionId, () => {
-  loadData()
-})
-
-onMounted(() => {
-  loadData()
-})
-
-onMounted(() => {
-  // 从路由 state 获取上传页传来的文件
-  if (history.state.file) {
-    selectedFile.value = history.state.file
-    selectedSize.value = history.state.size || 'medium'
-    handleGenerate()
-  }
-})
-
+// 核心生成逻辑
 const handleGenerate = async () => {
   if (!selectedFile.value || loading.value) return
   
   loading.value = true
   rawSummary.value = ''
+  paperTitle.value = '' // 重置标题
   
   try {
     await processPaper(
       selectedFile.value, 
       selectedSize.value, 
-      sessionId.value, 
+      '', 
       (chunk) => {
-        // 1. 提取 SESSION_ID
+        // 1. 提取 Session ID
         if (chunk.includes('SESSION_ID:')) {
           const match = chunk.match(/SESSION_ID:([\w-]+)/)
-          if (match) sessionId.value = match[1]
+          if (match) {
+            const newId = match[1]
+            sessionId.value = newId
+            window.history.replaceState(history.state, '', `/chat/${newId}`)
+          }
           chunk = chunk.replace(/SESSION_ID:[\w-]+\n?/, '')
         }
         
-        // 2. 实时提取 Title (如果包含)
+        // 2. 提取 Title (流式输出时)
+        // 如果 chunk 中包含 "Title: "，将其截取到 paperTitle 中
         if (chunk.includes('Title:')) {
-            const titleMatch = chunk.match(/Title:\s*(.*)/)
-            if (titleMatch) paperTitle.value = titleMatch[1].split('\n')[0]
+          const titleMatch = chunk.match(/Title:\s*(.*)/)
+          if (titleMatch) {
+            paperTitle.value = titleMatch[1].split('\n')[0]
+            // 同时从摘要内容中移除这一行，保持 SummaryPanel 纯净
+            chunk = chunk.replace(/Title:.*\n?/, '')
+          }
         }
         
         rawSummary.value += chunk
       }
     )
   } catch (error) {
-    console.error('Error:', error)
+    console.error('Generation error:', error)
   } finally {
     loading.value = false
   }
 }
+
+watch(() => route.params.sessionId, loadData)
+onMounted(loadData)
 </script>
+
+<style scoped>
+.fade-enter-active, .fade-leave-active { transition: opacity 0.5s ease; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
+</style>

@@ -45,7 +45,7 @@ export const processPaper = async (file, size = 'medium', sessionId, onMessage) 
  * @param {*} onMessage 
  */
 export const chatWithPaper = async (message, sessionId, onMessage) => {
-    const response = await fetch('/api/chat-stream', {
+    const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message, sessionId }),
@@ -71,7 +71,7 @@ export const chatWithPaper = async (message, sessionId, onMessage) => {
  */
 export const getSessionDetail = (sessionId) => {
   return request({
-    url: `/api/chat/session/${sessionId}`,
+    url: `/chat/session/${sessionId}`,
     method: 'GET'
   })
 }
