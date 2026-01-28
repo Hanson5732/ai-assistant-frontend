@@ -32,13 +32,17 @@
     </div>
 
     <div class="p-4 border-t flex gap-2">
-      <input 
-        v-model="inputMsg" 
-        @keyup.enter="handleSend"
+      <textarea 
+        v-model="userInput"
+          ref="textareaRef"
+          rows="1"
+          @input="adjustHeight"
+          @keydown.enter.exact.prevent="handleSend"
+          @keydown.enter.shift.exact="userInput += '\n'"
         :disabled="loading || !sessionId"
         placeholder="Ask something about the paper..."
         class="flex-1 border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-      />
+      ></textarea>
       <button 
         @click="handleSend" 
         :disabled="loading || !sessionId"
@@ -61,14 +65,23 @@ const chatHistory = ref([])
 const userInput = ref('')
 const isTyping = ref(false)
 
+const textareaRef = ref(null)
+const adjustHeight = () => {
+  const textarea = textareaRef.value
+  if (textarea) {
+    textarea.style.height = 'auto' // 先重置高度以计算 scrollHeight
+    textarea.style.height = `${textarea.scrollHeight}px`
+  }
+}
+
 const renderMarkdown = (content) => md.render(content)
 
 const loadHistory = async () => {
   if (!props.sessionId || props.sessionId === 'new') return
   try {
     const res = await getSessionDetail(props.sessionId)
-    if (res.code === 1) {
-      chatHistory.value = res.data.messages || []
+    if (res.data.code === 1) {
+      chatHistory.value = res.data.data.messages || []
       scrollToBottom()
     }
   } catch (err) {
@@ -79,7 +92,7 @@ const loadHistory = async () => {
 // 修改发送逻辑
 const handleSend = async () => {
   if (!userInput.value.trim() || isTyping.value) return
-  
+
   const text = userInput.value
   const userMsg = { role: 'user', content: text }
   
@@ -90,6 +103,10 @@ const handleSend = async () => {
   userInput.value = ''
   isTyping.value = true
   
+  if (textareaRef.value) {
+    textareaRef.value.style.height = 'auto'
+  }
+
   try {
     // 2. 调用流式接口，在回调中更新内容
     await chatWithPaper(text, props.sessionId, (chunk) => {

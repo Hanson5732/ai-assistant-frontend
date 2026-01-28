@@ -14,7 +14,7 @@
       </button>
     </div>
 
-    <nav class="flex-1 px-3 space-y-2 mt-4 overflow-y-auto">
+    <nav class="flex-1 px-3 space-y-2 mt-4 overflow-y-auto custom-scrollbar">
       <div>
         <button 
           @click="toggleSubMenu"
@@ -38,12 +38,12 @@
           
           <div 
             v-for="chat in history" 
-            :key="chat" 
-            @click="loadChat(chat)"
+            :key="chat.id" 
+            @click="loadChat(chat.id)"
             class="p-2 text-xs text-gray-500 hover:text-indigo-600 hover:bg-white rounded cursor-pointer truncate"
             :title="chat"
           >
-            {{ chat }}
+            {{ chat.title }}
           </div>
 
           <div v-if="history.length === 0" class="p-2 text-[10px] text-gray-400">
@@ -56,13 +56,15 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { getSessions } from '@/apis/sidebar'
+import { useRoute } from 'vue-router'
 
 
 const isCollapsed = ref(false)
 const isSubMenuOpen = ref(true)
 const history = ref([])
+const route = useRoute()
 
 /**
  * 获取所有历史会话索引
@@ -70,8 +72,8 @@ const history = ref([])
 const loadHistoryList = async () => {
   try {
     const res = await getSessions();
-    if (res.code == 1) {
-      history.value = res.data
+    if (res.data.code == 1) {
+      history.value = res.data.data
     }
   } catch (error) {
     // console.error('加载历史记录失败:', error)
@@ -101,16 +103,25 @@ const handleNewChat = () => {
   window.location.href = '/chat'
 }
 
-// 组件挂载时立即执行请求
-onMounted(() => {
-  loadHistoryList()
-})
+watch(() => route.params.sessionId, (newId) => {
+  if (newId) {
+    loadHistoryList()
+  }
+}, { immediate: true })
 
-onUnmounted(() => {
+onMounted(() => {
   loadHistoryList()
 })
 </script>
 
 <style scoped>
 .w-18 { width: 4.5rem; }
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #e2e8f0;
+  border-radius: 10px;
+}
 </style>

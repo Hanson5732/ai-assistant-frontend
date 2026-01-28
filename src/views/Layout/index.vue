@@ -1,12 +1,16 @@
 <template>
-    <div class="min-h-screen bg-gray-50 flex flex-col md:flex-row font-sans">
-        <Sidebar />
-        <UserProfile />
-        <RouterView />
+  <div class="flex h-screen overflow-hidden bg-gray-50">
+    
+    <Sidebar class="flex-shrink-0 border-r border-gray-200" />
+
+    <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <main class="flex-1 overflow-y-auto">
+        <router-view />
+      </main>
     </div>
+  </div>
 </template>
 
 <script setup>
 import Sidebar from './components/Sidebar.vue'
-import UserProfile from './components/UserProfile.vue';
 </script>
