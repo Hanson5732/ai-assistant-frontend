@@ -65,13 +65,24 @@ export const chatWithPaper = async (message, sessionId, onMessage) => {
 }
 
 /**
- * 获取历史聊天记录
+ * 获取历史聊天记录信息
  * @param {*} sessionId 
  * @returns 
  */
 export const getSessionDetail = (sessionId) => {
   return request({
-    url: `/chat/session/${sessionId}`,
+    url: `/chat/session/${sessionId}/summary`,
     method: 'GET'
   })
+}
+
+
+export const getSessionMessages = (sessionId, page) => {
+    return request({
+        url: `/chat/session/${sessionId}/messages`,
+        method: 'GET',
+        params: {
+            page
+        }
+    })
 }

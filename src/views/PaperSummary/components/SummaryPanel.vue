@@ -1,7 +1,7 @@
 <template>
   <div class="bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col h-[500px]">
     <div class="p-4 border-b flex justify-between items-center bg-gray-50 rounded-t-xl">
-      <h3 class="font-bold text-gray-700 font-serif text-lg">DeepSeek Summary</h3>
+      <h3 class="font-bold text-gray-700 font-serif text-lg">Paper Summary</h3>
     </div>
 
     <div class="p-6 overflow-y-auto text-sm text-gray-700 leading-relaxed scrollbar-thin">
