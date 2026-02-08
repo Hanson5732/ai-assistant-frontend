@@ -7,7 +7,7 @@
     <div class="p-6 overflow-y-auto text-sm text-gray-700 leading-relaxed scrollbar-thin">
       <div v-if="loading" class="flex flex-col items-center justify-center h-full space-y-4 text-center">
         <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
-        <p class="text-gray-400">Processing abstractive summary via DeepSeek...</p>
+        <p class="text-gray-400">Processing abstractive summary via gemini...</p>
       </div>
 
       <div v-else-if="summary" class="markdown-body">

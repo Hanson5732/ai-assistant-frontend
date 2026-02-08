@@ -4,7 +4,7 @@
     class="bg-gray-50 border-r border-gray-200 flex flex-col transition-all duration-300 relative h-screen"
   >
     <div class="p-4 flex items-center" :class="[isCollapsed ? 'justify-center' : 'justify-between']">
-      <h1 v-if="!isCollapsed" class="text-xl font-bold text-indigo-600 truncate">🚀 AI Research</h1>
+      <h1 v-if="!isCollapsed" class="text-xl font-bold text-indigo-600 truncate">🚀 Paper Assistant</h1>
       <button 
         @click="isCollapsed = !isCollapsed" 
         class="p-2 hover:bg-gray-200 rounded-lg transition-colors"
@@ -23,7 +23,7 @@
         >
           <div class="flex items-center gap-3">
             <span class="text-lg" title="Paper Summary">📄</span>
-            <span v-if="!isCollapsed" class="font-medium text-sm">Historical Conversations</span>
+            <span v-if="!isCollapsed" class="font-medium text-sm">Paper Summary</span>
           </div>
           <span v-if="!isCollapsed" class="text-[10px] transition-transform" :class="{ 'rotate-180': isSubMenuOpen }">▼</span>
         </button>
@@ -51,6 +51,17 @@
           </div>
         </div>
       </div>
+
+      <router-link 
+          to="/bibliography"
+          class="flex items-center p-3 text-gray-700 hover:bg-white hover:shadow-sm rounded-lg transition-all group"
+          :class="[isCollapsed ? 'justify-center' : '']"
+        >
+          <div class="flex items-center gap-3">
+            <span class="text-lg" title="Bibliography Management">📚</span>
+            <span v-if="!isCollapsed" class="font-medium text-sm">Bibliography</span>
+          </div>
+        </router-link>
     </nav>
   </aside>
 </template>

@@ -13,7 +13,7 @@ export const processPaper = async (file, size = 'medium', sessionId, onMessage) 
     formData.append('size', size);
     formData.append('sessionId', sessionId || 'null');
 
-    const response = await fetch('/api/process-paper', {
+    const response = await fetch('/api/ocr/process-paper', {
         method: 'POST',
         body: formData,
     });
@@ -45,7 +45,7 @@ export const processPaper = async (file, size = 'medium', sessionId, onMessage) 
  * @param {*} onMessage 
  */
 export const chatWithPaper = async (message, sessionId, onMessage) => {
-    const response = await fetch('/api/chat', {
+    const response = await fetch('/api/ocr/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message, sessionId }),
