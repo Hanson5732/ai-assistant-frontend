@@ -7,11 +7,15 @@ export const getBibliography = async () => {
     })
 }
 
-export const addBibliography = async (data) => {
+export const addBibliography = async (data, url= '/bibli/upload') => {
     return request({
-        url: '/bibli/upload',
+        url: url,
         method: 'POST',
-        data
+        data,
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        },
+        timeout: 600000
     })
 }
 
