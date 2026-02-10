@@ -25,29 +25,31 @@
         </div>
       </div>
 
-      <div v-for="(pair, groupIndex) in chatHistory" :key="groupIndex" class="space-y-4 w-full border-b border-gray-100 pb-4">
+      <div v-for="(pair, groupIndex) in chatHistory" :key="groupIndex"
+        class="space-y-4 w-full border-b border-gray-100 pb-4">
         <template v-for="(msg, msgIndex) in pair" :key="groupIndex + '-' + msgIndex">
           <div :class="['flex w-full mb-2', msg.role === 'user' ? 'justify-end' : 'justify-start']">
             <div :class="['flex flex-col max-w-[80%]', msg.role === 'user' ? 'items-end' : 'items-start']">
-              <div v-if="msg.role === 'assistant'" class="bg-white text-gray-800 border border-gray-100 p-3 rounded-lg text-sm shadow-sm">
+              <div v-if="msg.role === 'assistant'"
+                class="bg-white text-gray-800 border border-gray-100 p-3 rounded-lg text-sm shadow-sm">
                 <div class="prose prose-sm max-w-none" v-html="renderMarkdown(msg.content)"></div>
-                </div>
+              </div>
               <div v-else class="bg-indigo-600 text-white p-3 rounded-lg text-sm shadow-sm whitespace-pre-wrap">
                 {{ msg.content }}
               </div>
             </div>
           </div>
           <div v-if="msg.role === 'assistant'" class="mt-1 ml-1">
-                <button @click="copyContent(msg.content)"
-                  class="flex items-center space-x-1 text-gray-400 hover:text-indigo-500 transition-colors duration-200 text-xs">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
-                    <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
-                  </svg>
-                  <span>Copy</span>
-                </button>
-              </div>
+            <button @click="copyContent(msg.content)"
+              class="flex items-center space-x-1 text-gray-400 hover:text-indigo-500 transition-colors duration-200 text-xs">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+                <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+              </svg>
+              <span>Copy</span>
+            </button>
+          </div>
         </template>
       </div>
 
@@ -90,7 +92,7 @@ const loadHistory = async (isLoadMore = false) => {
       const fetchedMessages = (res.data.data.messages || []).map(pair => {
         return [pair[1], pair[0]] // 反转：让 assistant 在前
       })
-      
+
       hasMore.value = res.data.data.more
       if (isLoadMore) {
         chatHistory.value.push(...fetchedMessages) // 向下滚动，追加到末尾
@@ -115,10 +117,10 @@ defineExpose({ loadMore })
 // 发送新消息：插入到最上方
 const handleSend = async () => {
   if (!userInput.value.trim() || isTyping.value) return
-  
+
   const text = userInput.value
   userInput.value = ''
-  
+
   // 按照 [{assistant}, {user}] 格式插入到数组最前面
   const newPair = [
     { role: 'assistant', content: '...' },

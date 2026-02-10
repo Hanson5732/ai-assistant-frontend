@@ -46,6 +46,42 @@
                 </div>
             </div>
 
+            <div class="mb-8 p-4 bg-white border border-gray-200 rounded-xl shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider flex items-center">
+                        <span class="mr-2">📄</span> Export Citation
+                    </h3>
+                    <div class="flex gap-2">
+                        <button v-for="fmt in ['APA', 'MLA', 'IEEE', 'Chicago', 'Harvard']" :key="fmt" @click="activeFormat = fmt"
+                            :class="['px-3 py-1 text-sm font-medium rounded-full transition-all',
+                                activeFormat === fmt ? 'bg-indigo-600 text-white shadow-md' : 'bg-gray-100 text-gray-600 hover:bg-gray-200']">
+                            {{ fmt }}
+                        </button>
+                    </div>
+
+                    <div class="mt-1 ml-1">
+                        <button @click="copyCitation"
+                            class="flex items-center space-x-1.5 text-gray-400 hover:text-indigo-500 transition-colors duration-200 text-xs">
+                            <svg v-if="!copied" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
+                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+                                <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+                            </svg>
+                            <span v-if="!copied" class="text-sm">Copy</span>
+                            <span v-else class="text-gray-400 text-sm font-bold">Done!</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="relative group">
+                    <div
+                        class="p-4 bg-gray-50 rounded-lg border border-dashed border-gray-300 text-sm text-gray-800 italic break-words">
+                        {{ generatedCitation }}
+                    </div>
+                </div>
+            </div>
+
             <div v-if="paper.references && paper.references.length > 0">
                 <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
                     <span class="w-1 h-6 bg-indigo-600 rounded mr-2"></span>
@@ -71,18 +107,104 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { getBibliographyDetail } from '@/apis/bibliography'
 
 const route = useRoute()
 const paper = ref(null)
 const loading = ref(true)
+const activeFormat = ref('APA')
+const copied = ref(false)
 
 const formatAuthors = (authors) => {
-    if (!authors || authors.length === 0) return 'Unknown'
+    if (!authors || authors.length === 0) return 'Unknown Author'
     return authors.join(', ')
 }
+
+
+const processAuthorName = (author, invert, abbreviate) => {
+    if (!author) return '';
+    const parts = author.trim().split(/\s+/);
+    if (parts.length <= 1) return author;
+
+    const lastName = parts.pop(); // 姓
+    let firstNames = parts; // 名列表
+
+    // 如果需要缩写名，将 ["Kunkun", "Michael"] 变为 ["K.", "M."]
+    if (abbreviate) {
+        firstNames = firstNames.map(name => name.charAt(0).toUpperCase() + '.');
+    }
+
+    const firstNameStr = firstNames.join(' ');
+
+    if (invert) {
+        return `${lastName}, ${firstNameStr}`;
+    } else {
+        return `${firstNameStr} ${lastName}`;
+    }
+};
+
+const generatedCitation = computed(() => {
+    if (!paper.value) return '';
+
+    const { title, authors, pub_year, venue, doi, page_range } = paper.value;
+    const year = pub_year || 'n.d.';
+    const journal = venue || 'Unknown Venue';
+    const pages = page_range ? `pp. ${page_range}` : '';
+
+    // 根据不同格式的规范定义处理逻辑
+    // APA: 姓在前, 缩写名 (Long, K.)
+    // MLA: 姓在前, 不缩写 (Long, Kunkun) —— 但为了统一，也可根据偏好设为缩写
+    // IEEE: 名在前, 缩写名 (K. Long)
+    // Chicago: 姓在前, 不缩写 (Long, Kunkun)
+    // Harvard: 姓在前, 缩写名 (Long, K.)
+
+    const getAuthorsFormatted = (invert, abbreviate, useAnd = false) => {
+        if (!authors || authors.length === 0) return 'Unknown';
+        const processed = authors.map(a => processAuthorName(a, invert, abbreviate));
+        if (useAnd && processed.length > 1) {
+            return processed.slice(0, -1).join(', ') + ' & ' + processed.slice(-1);
+        }
+        return processed.join(', ');
+    };
+
+    switch (activeFormat.value) {
+        case 'APA':
+            // 规范：Long, K., & Huang, H. (2025).
+            return `${getAuthorsFormatted(true, true, true)} (${year}). ${title}. ${journal}.${pages ? ' ' + pages + '.' : ''}${doi ? ' https://doi.org/' + doi : ''}`;
+        
+        case 'MLA':
+            // 规范：Long, Kunliang, and Huang, Han. (通常不缩写，此处设为不缩写以示区别)
+            return `${getAuthorsFormatted(true, false)}. "${title}." ${journal}, ${year}.${pages ? ' ' + pages + '.' : ''}`;
+        
+        case 'IEEE':
+            // 规范：K. Long and H. Huang, (名缩写在前)
+            return `${getAuthorsFormatted(false, true)}, "${title}," ${journal}, ${year}.${pages ? ' ' + pages + '.' : ''}${doi ? ' doi: ' + doi : ''}`;
+        
+        case 'Chicago':
+            // 规范：Long, Kunliang. (通常不缩写)
+            return `${getAuthorsFormatted(true, false)}. "${title}." ${journal} (${year}).${pages ? ' ' + pages + '.' : ''}`;
+        
+        case 'Harvard':
+            // 规范：Long, K. (2025)
+            return `${getAuthorsFormatted(true, true)} (${year}) '${title}', ${journal}.${pages ? ' ' + pages + '.' : ''}`;
+        
+        default:
+            return '';
+    }
+});
+
+const copyCitation = async () => {
+    try {
+        await navigator.clipboard.writeText(generatedCitation.value)
+        copied.value = true
+        setTimeout(() => copied.value = false, 2000)
+    } catch (err) {
+        console.error('Failed to copy!', err)
+    }
+}
+
 
 const fetchDetail = async () => {
     try {
