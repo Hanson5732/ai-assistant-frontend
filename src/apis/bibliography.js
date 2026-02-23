@@ -1,9 +1,10 @@
 import request from '@/utils/request'
 
-export const getBibliography = async () => {
+export const getBibliography = async (page = 1) => {
     return request({
         url: '/bibli/list',
-        method: 'GET'
+        method: 'GET',
+        params: { page }
     })
 }
 

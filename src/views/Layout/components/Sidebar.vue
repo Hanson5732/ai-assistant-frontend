@@ -40,10 +40,20 @@
             v-for="chat in history" 
             :key="chat.id" 
             @click="loadChat(chat.id)"
-            class="p-2 text-xs text-gray-500 hover:text-indigo-600 hover:bg-white rounded cursor-pointer truncate"
-            :title="chat"
+            class="group relative flex items-center justify-between p-2 text-xs text-gray-500 hover:text-indigo-600 hover:bg-white rounded cursor-pointer transition-all"
+            :title="chat.title"
           >
-            {{ chat.title }}
+            <span class="truncate flex-1">{{ chat.title }}</span>
+            
+            <button 
+              @click.stop="handleDeleteChat(chat.id)"
+              class="opacity-0 group-hover:opacity-100 ml-2 p-1 text-gray-400 hover:text-red-500 transition-opacity"
+              title="Clear history"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
 
           <div v-if="history.length === 0" class="p-2 text-[10px] text-gray-400">
@@ -68,18 +78,15 @@
 
 <script setup>
 import { ref, onMounted, watch } from 'vue'
-import { getSessions } from '@/apis/sidebar'
+import { getSessions, deleteSession } from '@/apis/sidebar'
 import { useRoute } from 'vue-router'
-
+import { ElMessageBox, ElMessage } from 'element-plus'
 
 const isCollapsed = ref(false)
 const isSubMenuOpen = ref(true)
 const history = ref([])
 const route = useRoute()
 
-/**
- * 获取所有历史会话索引
- */
 const loadHistoryList = async () => {
   try {
     const res = await getSessions();
@@ -88,6 +95,39 @@ const loadHistoryList = async () => {
     }
   } catch (error) {
     // console.error('加载历史记录失败:', error)
+  }
+}
+
+/**
+ * 删除/清除特定会话记录 (使用 Element Plus)
+ */
+const handleDeleteChat = async (id) => {
+  try {
+    // 使用 ElMessageBox 代替原生 confirm
+    await ElMessageBox.confirm(
+      'Are you sure you want to clear this chat history?',
+      'Warning',
+      {
+        confirmButtonText: 'OK',
+        cancelButtonText: 'Cancel',
+        type: 'warning',
+      }
+    )
+    
+    const res = await deleteSession(id);
+    if (res.data.code === 1) {
+      ElMessage.success('Chat history cleared') // 成功提示
+      await loadHistoryList();
+      if (route.params.sessionId === id.toString()) {
+        window.location.reload();
+      }
+    }
+  } catch (error) {
+    // 用户取消点击时不报错
+    if (error !== 'cancel') {
+      console.error('Failed to reset chat:', error);
+      ElMessage.error('Failed to clear history');
+    }
   }
 }
 
@@ -100,16 +140,10 @@ const toggleSubMenu = () => {
   }
 }
 
-/**
- * 加载特定会话：通过 URL 参数跳转并触发页面刷新加载
- */
 const loadChat = (id) => {
   window.location.href = `/chat/${id}`
 }
 
-/**
- * 新建会话：清除当前参数并刷新
- */
 const handleNewChat = () => {
   window.location.href = '/chat'
 }

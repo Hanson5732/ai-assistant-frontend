@@ -6,3 +6,11 @@ export const getSessions = async () => {
         method: 'GET'
     })
 }
+
+
+export const deleteSession = async (sessionId) => {
+    return request({
+        url: `/chat/delete/${sessionId}`,
+        method: 'DELETE'
+    })
+}
