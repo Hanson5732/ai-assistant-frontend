@@ -108,19 +108,33 @@
             </div>
         </div>
         <div v-if="showEditModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-            <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 animate-fade-in">
+            <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl p-6 animate-fade-in max-h-[90vh] overflow-y-auto">
                 <h2 class="text-xl font-bold text-gray-800 mb-5">Edit Bibliography</h2>
                 
-                <div class="space-y-4">
+                <div class="space-y-5">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
-                        <input v-model="editForm.title" type="text" 
-                               class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none" />
+                        <textarea v-model="editForm.title" rows="3"
+                               class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-none leading-relaxed"></textarea>
                     </div>
+                    
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Author(s) (comma separated)</label>
-                        <input v-model="editForm.authorsStr" type="text" placeholder="e.g. John Doe, Jane Smith"
-                               class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none" />
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Author(s)</label>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div v-for="(author, index) in editForm.authors" :key="index" class="flex items-center gap-2">
+                                <input v-model="editForm.authors[index]" type="text" placeholder="Author Name"
+                                       class="flex-1 border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none" />
+                                
+                                <button @click="removeAuthor(index)" title="Remove" class="p-1 text-gray-400 hover:text-red-500 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <button @click="addAuthor" class="mt-3 text-sm text-indigo-600 hover:text-indigo-800 font-semibold flex items-center">
+                            <span class="mr-1">+</span> Add Author
+                        </button>
                     </div>
                     
                     <div class="flex gap-4">
@@ -178,7 +192,7 @@ const copied = ref(false)
 const showEditModal = ref(false)
 const editForm = ref({
     title: '',
-    authorsStr: '',
+    authors: [],
     pub_year: '',
     venue: '',
     doi: '',
@@ -293,7 +307,9 @@ const openEditModal = () => {
     if (paper.value) {
         editForm.value = {
             title: paper.value.title || '',
-            authorsStr: paper.value.authors ? paper.value.authors.join(', ') : '',
+            authors: paper.value.authors && paper.value.authors.length > 0 
+                     ? [...paper.value.authors] 
+                     : [''], 
             pub_year: paper.value.pub_year || '',
             venue: paper.value.venue || '',
             doi: paper.value.doi || '',
@@ -303,10 +319,18 @@ const openEditModal = () => {
     }
 }
 
+const addAuthor = () => {
+    editForm.value.authors.push('')
+}
+
+const removeAuthor = (index) => {
+    editForm.value.authors.splice(index, 1)
+}
+
 const submitEdit = async () => {
     try {
-        const authorsArray = editForm.value.authorsStr
-            .split(',')
+        // 清理掉空的作者名并去掉前后空格
+        const authorsArray = editForm.value.authors
             .map(a => a.trim())
             .filter(a => a.length > 0)
 
@@ -322,7 +346,7 @@ const submitEdit = async () => {
         const res = await updateBibliography(route.params.id, payload)
         if (res.data.code === 1) {
             showEditModal.value = false
-            await fetchDetail() 
+            await fetchDetail() // 刷新页面数据
         } else {
             alert('Failed to update: ' + res.data.message)
         }
