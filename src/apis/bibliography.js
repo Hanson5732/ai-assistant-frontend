@@ -34,3 +34,12 @@ export const getBibliographyDetail = async (id) => {
         method: 'GET'
     })
 }
+
+
+export const updateBibliography = async (id, data) => {
+    return request({
+        url: `/bibli/update/${id}`,
+        method: 'PUT',
+        data
+    })
+}

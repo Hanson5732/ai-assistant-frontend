@@ -1,11 +1,15 @@
 <template>
     <div class="p-6 bg-white min-h-screen relative">
-        <div class="mb-6 flex items-center">
+        <div class="mb-6 flex items-center justify-between">
             <router-link to="/bibliography"
                 class="flex items-center text-gray-500 hover:text-indigo-600 transition-colors">
                 <span class="text-2xl mr-1">‹</span>
                 <span class="font-medium">Return</span>
             </router-link>
+            <button @click="openEditModal"
+                class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
+                Edit Paper
+            </button>
         </div>
 
         <div v-if="loading" class="flex justify-center py-20">
@@ -103,19 +107,83 @@
                 No bibliographic references available for this paper.
             </div>
         </div>
+        <div v-if="showEditModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+            <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 animate-fade-in">
+                <h2 class="text-xl font-bold text-gray-800 mb-5">Edit Bibliography</h2>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                        <input v-model="editForm.title" type="text" 
+                               class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Author(s) (comma separated)</label>
+                        <input v-model="editForm.authorsStr" type="text" placeholder="e.g. John Doe, Jane Smith"
+                               class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none" />
+                    </div>
+                    
+                    <div class="flex gap-4">
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Year</label>
+                            <input v-model="editForm.pub_year" type="number" 
+                                   class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none" />
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Venue (Journal/Conf)</label>
+                            <input v-model="editForm.venue" type="text" 
+                                   class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none" />
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-4">
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">DOI</label>
+                            <input v-model="editForm.doi" type="text" 
+                                   class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none" />
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Page Range</label>
+                            <input v-model="editForm.page_range" type="text" placeholder="e.g. 100-120"
+                                   class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 flex justify-end gap-3">
+                    <button @click="showEditModal = false" 
+                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                        Cancel
+                    </button>
+                    <button @click="submitEdit" 
+                            class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors">
+                        Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { getBibliographyDetail } from '@/apis/bibliography'
+import { getBibliographyDetail, updateBibliography } from '@/apis/bibliography'
 
 const route = useRoute()
 const paper = ref(null)
 const loading = ref(true)
 const activeFormat = ref('APA')
 const copied = ref(false)
+const showEditModal = ref(false)
+const editForm = ref({
+    title: '',
+    authorsStr: '',
+    pub_year: '',
+    venue: '',
+    doi: '',
+    page_range: ''
+})
 
 const formatAuthors = (authors) => {
     if (!authors || authors.length === 0) return 'Unknown Author'
@@ -219,6 +287,51 @@ const fetchDetail = async () => {
         loading.value = false
     }
 }
+
+
+const openEditModal = () => {
+    if (paper.value) {
+        editForm.value = {
+            title: paper.value.title || '',
+            authorsStr: paper.value.authors ? paper.value.authors.join(', ') : '',
+            pub_year: paper.value.pub_year || '',
+            venue: paper.value.venue || '',
+            doi: paper.value.doi || '',
+            page_range: paper.value.page_range || ''
+        }
+        showEditModal.value = true
+    }
+}
+
+const submitEdit = async () => {
+    try {
+        const authorsArray = editForm.value.authorsStr
+            .split(',')
+            .map(a => a.trim())
+            .filter(a => a.length > 0)
+
+        const payload = {
+            title: editForm.value.title,
+            authors: authorsArray,
+            pub_year: editForm.value.pub_year,
+            venue: editForm.value.venue,
+            doi: editForm.value.doi,
+            page_range: editForm.value.page_range
+        }
+        
+        const res = await updateBibliography(route.params.id, payload)
+        if (res.data.code === 1) {
+            showEditModal.value = false
+            await fetchDetail() 
+        } else {
+            alert('Failed to update: ' + res.data.message)
+        }
+    } catch (error) {
+        console.error('Update error:', error)
+        alert('An error occurred while updating.')
+    }
+}
+
 
 onMounted(async () => {
     await fetchDetail()
