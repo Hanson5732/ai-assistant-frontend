@@ -4,6 +4,8 @@ import Layout from '@/views/Layout/index.vue';
 import FileUpload from '@/views/FileUpload/index.vue';
 import Bibliography from '@/views/Bibliography/index.vue';
 import BibliographyDetail from '@/views/BibliographyDetail/index.vue';
+import Folder from '@/views/Folder/index.vue';
+import FolderDetail from '@/views/FolderDetail/index.vue';
 
 const routes = [
   {
@@ -22,6 +24,13 @@ const routes = [
     children: [
         { path: '', name: 'BibliographyHome', component: Bibliography },
         { path: ':id', name: 'BibliographyDetail', component: BibliographyDetail }
+    ]
+  },
+  {
+    path: '/folder', component: Layout,
+    children: [
+        { path: '', name: 'FolderHome', component: Folder },
+        { path: ':id', name: 'FolderDetail', component: FolderDetail }
     ]
   }
 ];

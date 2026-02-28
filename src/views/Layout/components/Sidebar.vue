@@ -63,15 +63,26 @@
       </div>
 
       <router-link 
-          to="/bibliography"
-          class="flex items-center p-3 text-gray-700 hover:bg-white hover:shadow-sm rounded-lg transition-all group"
-          :class="[isCollapsed ? 'justify-center' : '']"
-        >
-          <div class="flex items-center gap-3">
-            <span class="text-lg" title="Bibliography Management">📚</span>
-            <span v-if="!isCollapsed" class="font-medium text-sm">Bibliography</span>
-          </div>
-        </router-link>
+        to="/bibliography"
+        class="flex items-center p-3 text-gray-700 hover:bg-white hover:shadow-sm rounded-lg transition-all group"
+        :class="[isCollapsed ? 'justify-center' : '']"
+      >
+        <div class="flex items-center gap-3">
+          <span class="text-lg" title="Bibliography Management">📚</span>
+          <span v-if="!isCollapsed" class="font-medium text-sm">Bibliography</span>
+        </div>
+      </router-link>
+      <router-link 
+        to="/folder"
+        class="flex items-center p-3 text-gray-700 hover:bg-white hover:shadow-sm rounded-lg transition-all group"
+        :class="[isCollapsed ? 'justify-center' : '']"
+      >
+        <div class="flex items-center gap-3">
+          <span class="text-lg" title="Folder Management">📁</span>
+          <span v-if="!isCollapsed" class="font-medium text-sm">Folders</span>
+        </div>
+      </router-link>
+
     </nav>
   </aside>
 </template>

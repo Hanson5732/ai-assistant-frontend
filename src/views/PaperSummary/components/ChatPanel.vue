@@ -9,18 +9,27 @@
         :disabled="loading || !sessionId" placeholder="Ask something about the paper..."
         class="flex-1 border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
       <button @click="handleSend" :disabled="loading || !sessionId"
-        class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-indigo-700 disabled:bg-gray-400">
+        class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-indigo-700 disabled:bg-gray-400">
         Send
       </button>
     </div>
 
     <div class="p-4 space-y-4 bg-gray-50/50">
-      <div v-if="isTyping" class="flex justify-start">
-        <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
-          <div class="flex space-x-1">
-            <div class="w-2 h-2 bg-gray-300 rounded-full animate-bounce"></div>
-            <div class="w-2 h-2 bg-gray-300 rounded-full animate-bounce [animation-delay:0.2s]"></div>
-            <div class="w-2 h-2 bg-gray-300 rounded-full animate-bounce [animation-delay:0.4s]"></div>
+      <div v-if="isTyping" class="flex w-full mb-4 justify-start">
+        <div class="flex-shrink-0 mr-3 mt-1">
+          <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 shadow-sm border border-indigo-200">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+          </div>
+        </div>
+        <div class="flex flex-col max-w-[70%] items-start">
+          <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
+            <div class="flex space-x-1 py-1 px-1">
+              <div class="w-2 h-2 bg-gray-300 rounded-full animate-bounce"></div>
+              <div class="w-2 h-2 bg-gray-300 rounded-full animate-bounce [animation-delay:0.2s]"></div>
+              <div class="w-2 h-2 bg-gray-300 rounded-full animate-bounce [animation-delay:0.4s]"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -29,26 +38,46 @@
         class="space-y-4 w-full border-b border-gray-100 pb-4">
         <template v-for="(msg, msgIndex) in pair" :key="groupIndex + '-' + msgIndex">
           <div :class="['flex w-full mb-2', msg.role === 'user' ? 'justify-end' : 'justify-start']">
-            <div :class="['flex flex-col max-w-[80%]', msg.role === 'user' ? 'items-end' : 'items-start']">
+            
+            <div v-if="msg.role === 'assistant'" class="flex-shrink-0 mr-3 mt-1">
+              <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 shadow-sm border border-indigo-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              </div>
+            </div>
+
+            <div :class="['flex flex-col max-w-[70%]', msg.role === 'user' ? 'items-end' : 'items-start']">
               <div v-if="msg.role === 'assistant'"
-                class="bg-white text-gray-800 border border-gray-100 p-3 rounded-lg text-sm shadow-sm">
+                class="bg-white text-gray-800 border border-gray-100 p-3 rounded-lg text-sm shadow-sm w-full overflow-x-auto">
                 <div class="prose prose-sm max-w-none" v-html="renderMarkdown(msg.content)"></div>
               </div>
+              
               <div v-else class="bg-indigo-600 text-white p-3 rounded-lg text-sm shadow-sm whitespace-pre-wrap">
                 {{ msg.content }}
               </div>
+
+              <div v-if="msg.role === 'assistant'" class="mt-1.5 ml-1">
+                <button @click="copyContent(msg.content)"
+                  class="flex items-center space-x-1 text-gray-400 hover:text-indigo-500 transition-colors duration-200 text-xs">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+                    <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+                  </svg>
+                  <span>Copy</span>
+                </button>
+              </div>
             </div>
-          </div>
-          <div v-if="msg.role === 'assistant'" class="mt-1 ml-1">
-            <button @click="copyContent(msg.content)"
-              class="flex items-center space-x-1 text-gray-400 hover:text-indigo-500 transition-colors duration-200 text-xs">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
-                <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
-              </svg>
-              <span>Copy</span>
-            </button>
+
+            <div v-if="msg.role === 'user'" class="flex-shrink-0 ml-3 mt-1">
+              <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-gray-600 shadow-sm border border-gray-300">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                </svg>
+              </div>
+            </div>
+
           </div>
         </template>
       </div>

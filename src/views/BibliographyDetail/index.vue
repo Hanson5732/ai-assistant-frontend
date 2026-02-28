@@ -183,6 +183,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { getBibliographyDetail, updateBibliography } from '@/apis/bibliography'
+import { formatPaperCitation } from '@/utils/citation'
 
 const route = useRoute()
 const paper = ref(null)
@@ -204,77 +205,9 @@ const formatAuthors = (authors) => {
     return authors.join(', ')
 }
 
-
-const processAuthorName = (author, invert, abbreviate) => {
-    if (!author) return '';
-    const parts = author.trim().split(/\s+/);
-    if (parts.length <= 1) return author;
-
-    const lastName = parts.pop(); // 姓
-    let firstNames = parts; // 名列表
-
-    // 如果需要缩写名，将 ["Kunkun", "Michael"] 变为 ["K.", "M."]
-    if (abbreviate) {
-        firstNames = firstNames.map(name => name.charAt(0).toUpperCase() + '.');
-    }
-
-    const firstNameStr = firstNames.join(' ');
-
-    if (invert) {
-        return `${lastName}, ${firstNameStr}`;
-    } else {
-        return `${firstNameStr} ${lastName}`;
-    }
-};
-
 const generatedCitation = computed(() => {
     if (!paper.value) return '';
-
-    const { title, authors, pub_year, venue, doi, page_range } = paper.value;
-    const year = pub_year || 'n.d.';
-    const journal = venue || 'Unknown Venue';
-    const pages = page_range ? `pp. ${page_range}` : '';
-
-    // 根据不同格式的规范定义处理逻辑
-    // APA: 姓在前, 缩写名 (Long, K.)
-    // MLA: 姓在前, 不缩写 (Long, Kunkun) —— 但为了统一，也可根据偏好设为缩写
-    // IEEE: 名在前, 缩写名 (K. Long)
-    // Chicago: 姓在前, 不缩写 (Long, Kunkun)
-    // Harvard: 姓在前, 缩写名 (Long, K.)
-
-    const getAuthorsFormatted = (invert, abbreviate, useAnd = false) => {
-        if (!authors || authors.length === 0) return 'Unknown';
-        const processed = authors.map(a => processAuthorName(a, invert, abbreviate));
-        if (useAnd && processed.length > 1) {
-            return processed.slice(0, -1).join(', ') + ' & ' + processed.slice(-1);
-        }
-        return processed.join(', ');
-    };
-
-    switch (activeFormat.value) {
-        case 'APA':
-            // 规范：Long, K., & Huang, H. (2025).
-            return `${getAuthorsFormatted(true, true, true)} (${year}). ${title}. ${journal}.${pages ? ' ' + pages + '.' : ''}${doi ? ' https://doi.org/' + doi : ''}`;
-        
-        case 'MLA':
-            // 规范：Long, Kunliang, and Huang, Han. (通常不缩写，此处设为不缩写以示区别)
-            return `${getAuthorsFormatted(true, false)}. "${title}." ${journal}, ${year}.${pages ? ' ' + pages + '.' : ''}`;
-        
-        case 'IEEE':
-            // 规范：K. Long and H. Huang, (名缩写在前)
-            return `${getAuthorsFormatted(false, true)}, "${title}," ${journal}, ${year}.${pages ? ' ' + pages + '.' : ''}${doi ? ' doi: ' + doi : ''}`;
-        
-        case 'Chicago':
-            // 规范：Long, Kunliang. (通常不缩写)
-            return `${getAuthorsFormatted(true, false)}. "${title}." ${journal} (${year}).${pages ? ' ' + pages + '.' : ''}`;
-        
-        case 'Harvard':
-            // 规范：Long, K. (2025)
-            return `${getAuthorsFormatted(true, true)} (${year}) '${title}', ${journal}.${pages ? ' ' + pages + '.' : ''}`;
-        
-        default:
-            return '';
-    }
+    return formatPaperCitation(paper.value, activeFormat.value);
 });
 
 const copyCitation = async () => {

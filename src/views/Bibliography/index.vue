@@ -9,6 +9,10 @@
         </button>
 
         <template v-else>
+          <button @click="openFolderDialog" :disabled="selectedIds.length === 0"
+            class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors shadow-md disabled:opacity-50 flex items-center gap-2">
+            <span>📁</span> Add to Folder ({{ selectedIds.length }})
+          </button>
           <button @click="handleBatchDelete" :disabled="selectedIds.length === 0"
             class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors shadow-md disabled:opacity-50">
             Delete ({{ selectedIds.length }})
@@ -104,6 +108,34 @@
         </span>
       </template>
     </el-dialog>
+
+    <el-dialog v-model="folderDialogVisible" title="Add to Folder" width="400px">
+      <div v-loading="loadingFolders" class="py-4">
+        <p class="mb-3 text-sm text-gray-600">Select a folder to add {{ selectedIds.length }} paper(s):</p>
+        
+        <el-select v-model="selectedFolderId" placeholder="Select a folder" class="w-full" size="large">
+          <el-option
+            v-for="folder in availableFolders"
+            :key="folder.id"
+            :label="folder.name"
+            :value="folder.id"
+          >
+            <span style="float: left">{{ folder.name }}</span>
+            <span style="float: right; color: #8492a6; font-size: 13px">{{ folder.paper_count }} papers</span>
+          </el-option>
+        </el-select>
+
+        <div v-if="availableFolders.length === 0 && !loadingFolders" class="mt-4 text-sm text-red-500 bg-red-50 p-3 rounded">
+          No folders available. Please create a folder first in the "Folders" menu.
+        </div>
+      </div>
+      <template #footer>
+        <el-button @click="folderDialogVisible = false">Cancel</el-button>
+        <el-button type="primary" :disabled="!selectedFolderId || isAddingToFolder" @click="confirmAddToFolder">
+          {{ isAddingToFolder ? 'Adding...' : 'Confirm' }}
+        </el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -112,6 +144,7 @@ import { ref, onMounted } from 'vue'
 import { getBibliography, addBibliography, deleteBibliography } from '@/apis/bibliography'
 import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
+import { getFolderList, batchUpdateFolderPapers } from '@/apis/folder'
 
 const router = useRouter()
 const bibliographyList = ref([])
@@ -133,6 +166,56 @@ const deleteDialogVisible = ref(false)
 const hasConfirmed = ref(false)
 const targetDeleteId = ref(null)
 const isBatch = ref(false)
+
+// 新增文件夹相关的状态变量
+const folderDialogVisible = ref(false)
+const availableFolders = ref([])
+const selectedFolderId = ref(null)
+const loadingFolders = ref(false)
+const isAddingToFolder = ref(false)
+
+
+const openFolderDialog = async () => {
+  folderDialogVisible.value = true
+  selectedFolderId.value = null
+  loadingFolders.value = true
+  
+  try {
+    const res = await getFolderList()
+    if (res.data.code === 1) {
+      availableFolders.value = res.data.data
+    }
+  } catch (error) {
+    ElMessage.error('Failed to load folders')
+  } finally {
+    loadingFolders.value = false
+  }
+}
+
+
+// 确认将选中的文献加入选中的文件夹
+const confirmAddToFolder = async () => {
+  if (!selectedFolderId.value) return
+  
+  isAddingToFolder.value = true
+  try {
+    // 调用后端的批量更新接口，action 传 'add'
+    const res = await batchUpdateFolderPapers(selectedFolderId.value, 'add', selectedIds.value)
+    
+    if (res.data.code === 1) {
+      ElMessage.success('Successfully added to folder')
+      folderDialogVisible.value = false
+      exitSelectMode() // 添加成功后退出多选模式
+    } else {
+      ElMessage.error(res.data.message || 'Failed to add to folder')
+    }
+  } catch (error) {
+    ElMessage.error('An error occurred while adding to folder')
+  } finally {
+    isAddingToFolder.value = false
+  }
+}
+
 
 const exitSelectMode = () => {
   isSelectMode.value = false

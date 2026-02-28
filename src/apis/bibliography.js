@@ -43,3 +43,12 @@ export const updateBibliography = async (id, data) => {
         data
     })
 }
+
+
+export const searchBibliography = async (data) => {
+    return request({
+        url: '/bibli/search',
+        method: 'POST',
+        data
+    })
+}

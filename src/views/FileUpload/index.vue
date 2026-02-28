@@ -2,8 +2,8 @@
   <main class="flex-1 p-4 md:p-8 overflow-y-auto">
     <div class="max-w-3xl mx-auto">
       <div v-if="!selectedFile" class="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
-        <h2 class="text-2xl font-bold text-gray-800 mb-6">Upload to Get a Summary</h2>
-        <h2 class="text-2xl font-bold text-gray-800 mb-6">of your Research Paper</h2>
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">Upload a PDF file to Get a Summary</h2>
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">of the Research Paper</h2>
         <div 
           @click="triggerInput"
           class="border-4 border-dashed border-gray-100 rounded-2xl p-16 hover:border-indigo-200 transition-all cursor-pointer bg-gray-50 group"
@@ -35,7 +35,7 @@
             >
               <option value="small">Short (100 words)</option>
               <option value="medium">Standard (200 words)</option>
-              <option value="large">Detailed Breakdown</option>
+              <option value="large">Detailed Breakdown (400 words)</option>
             </select>
           </div>
 
