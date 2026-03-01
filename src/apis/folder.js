@@ -40,3 +40,11 @@ export const getFolderList = (page = 1) => {
         params: { page }
     })
 }
+
+export const searchFolders = (name) => {
+    return request({
+        url: '/folder/search',
+        method: 'POST',
+        data: { name }
+    })
+}
