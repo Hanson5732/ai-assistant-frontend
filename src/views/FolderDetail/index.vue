@@ -1,227 +1,195 @@
 <template>
-    <div class="p-6 bg-gray-50 min-h-screen relative">
-        <div class="max-w-6xl mx-auto">
-            <div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <router-link to="/folder"
-                    class="flex items-center text-gray-500 hover:text-indigo-600 transition-colors w-fit">
-                    <span class="text-2xl mr-1">‹</span>
-                    <span class="font-medium">Return</span>
+    <div class="p-6 bg-white min-h-screen relative font-sans">
+        <div class="max-w-5xl mx-auto">
+            
+            <div class="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <router-link to="/folder" class="group flex items-center text-gray-500 hover:text-black transition-colors w-fit">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                    <span class="font-medium text-sm">Back to Folders</span>
                 </router-link>
 
                 <div class="flex items-center gap-3">
                     <template v-if="!isSelectMode">
-                        <button @click="isSelectMode = true" v-if="papers.length > 0"
-                            class="multi-select-mode-2 px-4 py-2 bg-gray-600 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition-colors shadow-sm">
-                            Select Papers
+                        <button @click="isSelectMode = true" v-if="papers.length > 0" class="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-200 transition-colors">
+                            Manage
                         </button>
-                        <button @click="openAddPaperModal"
-                            class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm flex items-center">
-                            <span class="mr-1.5 text-lg leading-none">+</span> Add Papers
+                        <button @click="openAddPaperModal" class="px-4 py-2 bg-black text-white text-sm font-medium rounded-xl hover:bg-gray-800 transition-colors flex items-center gap-2">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            Add Papers
                         </button>
                     </template>
-
                     <template v-else>
-                        <select v-model="activeFormat" 
-                            class="bg-white border border-gray-300 text-gray-700 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2 outline-none shadow-sm">
-                            <option v-for="fmt in ['APA', 'MLA', 'IEEE', 'Chicago', 'Harvard']" :key="fmt" :value="fmt">
-                                {{ fmt }}
-                            </option>
+                        <select v-model="activeFormat" class="bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-xl focus:ring-black outline-none py-2 px-3">
+                            <option v-for="fmt in ['APA', 'MLA', 'IEEE']" :key="fmt" :value="fmt">{{ fmt }}</option>
                         </select>
-
-                        <button @click="exportSelectedToTxt" :disabled="selectedPaperIds.length === 0"
-                            class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                            </svg>
+                        <button @click="exportSelectedToTxt" :disabled="selectedPaperIds.length === 0" class="px-4 py-2 bg-gray-800 text-white text-sm rounded-xl hover:bg-black disabled:opacity-50">
                             Export ({{ selectedPaperIds.length }})
                         </button>
-
-                        <button @click="removeSelected" :disabled="selectedPaperIds.length === 0"
-                            class="px-4 py-2 bg-red-500 text-white text-sm font-medium rounded-lg hover:bg-red-600 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
+                        <button @click="removeSelected" :disabled="selectedPaperIds.length === 0" class="px-4 py-2 bg-red-50 text-red-600 text-sm font-medium rounded-xl hover:bg-red-100 disabled:opacity-50">
                             Remove
                         </button>
-
-                        <button @click="exitSelectMode"
-                            class="px-4 py-2 border border-gray-300 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-100 transition-colors">
+                        <button @click="exitSelectMode" class="px-4 py-2 text-gray-500 hover:text-black text-sm transition-colors">
                             Cancel
                         </button>
                     </template>
                 </div>
             </div>
 
-            <div class="bg-white rounded-2xl p-6 mb-6 shadow-sm border border-gray-100">
-                <h1 class="text-2xl font-bold text-gray-900 mb-2">📁 {{ folderName }}</h1>
-                <p class="text-sm text-gray-500">
-                    Total {{ papers.length }} paper(s) in this folder.
-                </p>
+            <div class="mb-8 pb-6 border-b border-gray-200/60">
+                <h1 class="text-3xl font-semibold text-gray-900 mb-2 flex items-center gap-3">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-8 h-8 text-gray-300"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
+                    {{ folderName }}
+                </h1>
+                <p class="text-sm text-gray-500 pl-11">{{ papers.length }} document(s)</p>
             </div>
 
-            <div v-if="loading" class="flex justify-center py-20">
-                <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
+            <div v-if="loading" class="flex justify-center py-10">
+                <svg class="animate-spin h-6 w-6 text-black" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-dasharray="32" stroke-dashoffset="32" stroke-linecap="round"/></svg>
             </div>
 
-            <div v-else-if="papers.length > 0" class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div v-else-if="papers.length > 0" class="overflow-x-auto">
                 <table class="w-full text-left text-sm text-gray-600">
-                    <thead class="bg-gray-50 text-gray-700 uppercase font-medium border-b border-gray-200">
+                    <thead class="text-xs text-gray-400 uppercase tracking-wider border-b border-gray-200">
                         <tr>
-                            <th scope="col" class="p-4 w-4" v-if="isSelectMode">
-                                <div class="flex items-center">
-                                    <input type="checkbox" :checked="isAllSelected" @change="toggleSelectAll"
-                                        class="w-4 h-4 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500">
-                                </div>
-                            </th>
-                            <th scope="col" class="px-6 py-4">Title</th>
-                            <th scope="col" class="px-6 py-4">Author(s)</th>
-                            <th scope="col" class="px-6 py-4 text-center">Year</th>
-                            <th scope="col" class="px-6 py-4">Venue</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="paper in papers" :key="paper.id" class="border-b border-gray-50 hover:bg-gray-50 transition-colors">
-                            <td v-if="isSelectMode" class="p-4">
-                                <div class="flex items-center">
-                                    <input type="checkbox" :value="paper.id" v-model="selectedPaperIds"
-                                        class="w-4 h-4 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500">
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 font-medium text-gray-900 leading-snug">
-                                <router-link :to="`/bibliography/${paper.id}`" class="hover:text-indigo-600 hover:underline">
-                                    {{ paper.title }}
-                                </router-link>
-                            </td>
-                            <td class="px-6 py-4">{{ formatAuthors(paper.authors) }}</td>
-                            <td class="px-6 py-4 text-center">
-                                <span class="px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-full text-xs font-semibold">
-                                    {{ paper.pub_year || 'N/A' }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 italic text-xs">{{ paper.venue || 'Unknown' }}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <div v-else class="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-300">
-                <span class="text-4xl block mb-3">📭</span>
-                <h3 class="text-lg font-medium text-gray-900 mb-1">Folder is empty</h3>
-                <p class="text-gray-500 text-sm">You haven't added any papers to this folder yet.</p>
-            </div>
-        </div>
-
-        <el-dialog v-model="addPaperDialogVisible" title="Add Papers to Folder" width="700px" top="5vh" @closed="resetSearch">
-            
-            <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-4 space-y-4">
-                
-                <div class="flex items-start gap-3">
-                    <input type="checkbox" v-model="filters.title.enabled" class="mt-2 w-4 h-4 text-indigo-600 rounded cursor-pointer" />
-                    <div class="flex-1">
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Title</label>
-                        <textarea v-model="filters.title.value" :disabled="!filters.title.enabled" rows="2" placeholder="Enter paper title..."
-                            class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none resize-none disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"></textarea>
-                    </div>
-                </div>
-
-                <div class="flex items-center gap-3">
-                    <input type="checkbox" v-model="filters.author.enabled" class="w-4 h-4 text-indigo-600 rounded cursor-pointer" />
-                    <div class="flex-1">
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Author</label>
-                        <input v-model="filters.author.value" :disabled="!filters.author.enabled" type="text" placeholder="e.g. John Doe"
-                            class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors" />
-                    </div>
-                </div>
-
-                <div class="flex gap-4">
-                    <div class="flex items-center gap-3 flex-1">
-                        <input type="checkbox" v-model="filters.venue.enabled" class="w-4 h-4 text-indigo-600 rounded cursor-pointer" />
-                        <div class="flex-1">
-                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Venue (Journal/Conf)</label>
-                            <input v-model="filters.venue.value" :disabled="!filters.venue.enabled" type="text" placeholder="e.g. CVPR"
-                                class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors" />
-                        </div>
-                    </div>
-
-                    <div class="flex items-center gap-3 flex-1">
-                        <input type="checkbox" v-model="filters.year.enabled" class="w-4 h-4 text-indigo-600 rounded cursor-pointer" />
-                        <div class="flex-1">
-                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Publication Year</label>
-                            <div class="flex items-center gap-2">
-                                <select v-model="filters.year.start" :disabled="!filters.year.enabled" 
-                                    class="w-full border border-gray-300 rounded-lg p-2 text-sm outline-none disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed">
-                                    <option value="" disabled>Start</option>
-                                    <option v-for="y in yearOptions" :key="'start-'+y" :value="y">{{ y }}</option>
-                                </select>
-                                <span class="text-gray-400 font-bold">-</span>
-                                <select v-model="filters.year.end" :disabled="!filters.year.enabled" 
-                                    class="w-full border border-gray-300 rounded-lg p-2 text-sm outline-none disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed">
-                                    <option value="" disabled>End</option>
-                                    <option v-for="y in yearOptions" :key="'end-'+y" :value="y">{{ y }}</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="flex justify-end pt-2">
-                    <button @click="handleSearch" :disabled="isSearching"
-                        class="px-5 py-2 bg-gray-800 text-white text-sm font-medium rounded-lg hover:bg-gray-900 transition-colors flex items-center gap-2">
-                        <svg v-if="isSearching" class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                        🔍 {{ isSearching ? 'Searching...' : 'Search Papers' }}
-                    </button>
-                </div>
-            </div>
-
-            <div class="border border-gray-200 rounded-xl overflow-hidden max-h-64 overflow-y-auto">
-                <table class="w-full text-left text-sm text-gray-600">
-                    <thead class="bg-gray-100 sticky top-0 shadow-sm z-10">
-                        <tr>
-                            <th class="p-3 w-4"><input type="checkbox" :checked="isAllSearchSelected" @change="toggleSearchSelectAll" class="rounded text-indigo-600 focus:ring-indigo-500"></th>
-                            <th class="p-3 font-semibold text-gray-700">Title</th>
-                            <th class="p-3 font-semibold text-gray-700 w-24">Year</th>
+                            <th v-if="isSelectMode" class="py-3 px-2 w-8"><input type="checkbox" :checked="isAllSelected" @change="toggleSelectAll" class="rounded border-gray-300 text-black focus:ring-black"></th>
+                            <th class="py-3 px-2 font-medium">Title</th>
+                            <th class="py-3 px-2 font-medium w-48">Author(s)</th>
+                            <th class="py-3 px-2 font-medium w-24 text-center">Year</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
-                        <tr v-for="paper in searchResults" :key="paper.id" class="hover:bg-gray-50 transition-colors">
-                            <td class="p-3">
-                                <input type="checkbox" :value="paper.id" v-model="selectedSearchIds" 
-                                    :disabled="existingPaperIds.includes(paper.id)"
-                                    class="rounded text-indigo-600 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <tr v-for="paper in papers" :key="paper.id" class="hover:bg-gray-50/50 transition-colors group">
+                            <td v-if="isSelectMode" class="py-4 px-2">
+                                <input type="checkbox" :value="paper.id" v-model="selectedPaperIds" class="rounded border-gray-300 text-black focus:ring-black">
                             </td>
-                            <td class="p-3">
-                                <div class="font-medium text-gray-800 line-clamp-2">{{ paper.title }}</div>
-                                <div class="text-xs text-gray-400 mt-1">{{ formatAuthors(paper.authors) }}</div>
-                                <span v-if="existingPaperIds.includes(paper.id)" class="inline-block mt-1 px-1.5 py-0.5 bg-green-100 text-green-700 text-[10px] rounded font-bold">Already in folder</span>
+                            <td class="py-4 px-2 font-medium text-gray-900">
+                                <router-link :to="`/bibliography/${paper.id}`" class="hover:text-black hover:underline decoration-gray-300 underline-offset-4">
+                                    {{ paper.title }}
+                                </router-link>
                             </td>
-                            <td class="p-3 text-center">
-                                <span class="px-2 py-1 bg-gray-100 rounded text-xs">{{ paper.pub_year || 'N/A' }}</span>
-                            </td>
-                        </tr>
-                        <tr v-if="searchResults.length === 0 && hasSearched">
-                            <td colspan="3" class="p-8 text-center text-gray-400">No matching papers found.</td>
-                        </tr>
-                        <tr v-if="searchResults.length === 0 && !hasSearched">
-                            <td colspan="3" class="p-8 text-center text-gray-400 italic">Click Search to load your library papers.</td>
+                            <td class="py-4 px-2 text-gray-500 truncate max-w-[12rem]" :title="formatAuthors(paper.authors)">{{ formatAuthors(paper.authors) }}</td>
+                            <td class="py-4 px-2 text-center text-gray-400">{{ paper.pub_year || '—' }}</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
 
-            <template #footer>
-                <div class="flex justify-between items-center">
-                    <span class="text-sm text-gray-500">{{ selectedSearchIds.length }} selected</span>
-                    <div>
-                        <el-button @click="addPaperDialogVisible = false">Cancel</el-button>
-                        <el-button type="primary" :disabled="selectedSearchIds.length === 0 || isAdding" @click="confirmAddPapers">
-                            {{ isAdding ? 'Adding...' : 'Add Selected' }}
-                        </el-button>
+            <div v-else class="text-center py-20">
+                <p class="text-gray-400 text-sm">This folder is empty.</p>
+            </div>
+
+            <el-dialog v-model="addPaperDialogVisible" title="Add Papers to Folder" width="700px" top="5vh" @closed="resetSearch">
+                <div class="bg-gray-50 border border-gray-200/60 rounded-xl p-4 mb-4 space-y-4">
+                    <div class="flex items-start gap-3">
+                        <input type="checkbox" v-model="filters.title.enabled" class="mt-2 w-4 h-4 text-black border-gray-300 rounded cursor-pointer focus:ring-black" />
+                        <div class="flex-1">
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Title</label>
+                            <textarea v-model="filters.title.value" :disabled="!filters.title.enabled" rows="2" placeholder="Enter paper title..."
+                                class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400 outline-none resize-none disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <input type="checkbox" v-model="filters.author.enabled" class="w-4 h-4 text-black border-gray-300 rounded cursor-pointer focus:ring-black" />
+                        <div class="flex-1">
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Author</label>
+                            <input v-model="filters.author.value" :disabled="!filters.author.enabled" type="text" placeholder="e.g. John Doe"
+                                class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400 outline-none disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors" />
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4">
+                        <div class="flex items-center gap-3 flex-1">
+                            <input type="checkbox" v-model="filters.venue.enabled" class="w-4 h-4 text-black border-gray-300 rounded cursor-pointer focus:ring-black" />
+                            <div class="flex-1">
+                                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Venue (Journal/Conf)</label>
+                                <input v-model="filters.venue.value" :disabled="!filters.venue.enabled" type="text" placeholder="e.g. CVPR"
+                                    class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400 outline-none disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors" />
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-3 flex-1">
+                            <input type="checkbox" v-model="filters.year.enabled" class="w-4 h-4 text-black border-gray-300 rounded cursor-pointer focus:ring-black" />
+                            <div class="flex-1">
+                                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Publication Year</label>
+                                <div class="flex items-center gap-2">
+                                    <select v-model="filters.year.start" :disabled="!filters.year.enabled" 
+                                        class="w-full border border-gray-300 rounded-lg p-2 text-sm outline-none disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                                        <option value="" disabled>Start</option>
+                                        <option v-for="y in yearOptions" :key="'start-'+y" :value="y">{{ y }}</option>
+                                    </select>
+                                    <span class="text-gray-400 font-bold">-</span>
+                                    <select v-model="filters.year.end" :disabled="!filters.year.enabled" 
+                                        class="w-full border border-gray-300 rounded-lg p-2 text-sm outline-none disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                                        <option value="" disabled>End</option>
+                                        <option v-for="y in yearOptions" :key="'end-'+y" :value="y">{{ y }}</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end pt-2">
+                        <button @click="handleSearch" :disabled="isSearching"
+                            class="px-5 py-2 bg-black text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-2">
+                            <svg v-if="isSearching" class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                            <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                            {{ isSearching ? 'Searching...' : 'Search Papers' }}
+                        </button>
                     </div>
                 </div>
-            </template>
-        </el-dialog>
+
+                <div class="border border-gray-200/60 rounded-xl overflow-hidden max-h-64 overflow-y-auto">
+                    <table class="w-full text-left text-sm text-gray-600">
+                        <thead class="bg-gray-50/50 sticky top-0 shadow-sm z-10">
+                            <tr>
+                                <th class="p-3 w-4"><input type="checkbox" :checked="isAllSearchSelected" @change="toggleSearchSelectAll" class="rounded text-black border-gray-300 focus:ring-black"></th>
+                                <th class="p-3 font-semibold text-gray-700">Title</th>
+                                <th class="p-3 font-semibold text-gray-700 w-24">Year</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            <tr v-for="paper in searchResults" :key="paper.id" class="hover:bg-gray-50/50 transition-colors">
+                                <td class="p-3">
+                                    <input type="checkbox" :value="paper.id" v-model="selectedSearchIds" 
+                                        :disabled="existingPaperIds.includes(paper.id)"
+                                        class="rounded text-black border-gray-300 focus:ring-black disabled:opacity-50 disabled:cursor-not-allowed">
+                                </td>
+                                <td class="p-3">
+                                    <div class="font-medium text-gray-800 line-clamp-2">{{ paper.title }}</div>
+                                    <div class="text-xs text-gray-400 mt-1">{{ formatAuthors(paper.authors) }}</div>
+                                    <span v-if="existingPaperIds.includes(paper.id)" class="inline-block mt-1 px-1.5 py-0.5 bg-gray-100 text-gray-600 text-[10px] rounded font-semibold border border-gray-200">Already in folder</span>
+                                </td>
+                                <td class="p-3 text-center">
+                                    <span class="text-gray-500 text-xs">{{ paper.pub_year || 'N/A' }}</span>
+                                </td>
+                            </tr>
+                            <tr v-if="searchResults.length === 0 && hasSearched">
+                                <td colspan="3" class="p-8 text-center text-gray-400">No matching papers found.</td>
+                            </tr>
+                            <tr v-if="searchResults.length === 0 && !hasSearched">
+                                <td colspan="3" class="p-8 text-center text-gray-400 italic">Click Search to load your library papers.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <template #footer>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-500">{{ selectedSearchIds.length }} selected</span>
+                        <div>
+                            <el-button @click="addPaperDialogVisible = false">Cancel</el-button>
+                            <el-button type="primary" :disabled="selectedSearchIds.length === 0 || isAdding" @click="confirmAddPapers" class="bg-black hover:bg-gray-800 border-none">
+                                {{ isAdding ? 'Adding...' : 'Add Selected' }}
+                            </el-button>
+                        </div>
+                    </div>
+                </template>
+            </el-dialog>
+        </div>
     </div>
 </template>
+
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'

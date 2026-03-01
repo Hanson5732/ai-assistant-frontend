@@ -1,92 +1,106 @@
 <template>
-  <div class="bg-white rounded-xl shadow-sm border border-gray-200">
-    <div class="p-3 border-b bg-gray-50 flex justify-between items-center">
-      <h3 class="font-bold text-gray-700 font-serif text-lg">Contextual Q&A</h3>
-    </div>
-    <div class="p-4 border-b flex gap-2 bg-white sticky top-0 z-10 shadow-sm">
-      <textarea v-model="userInput" ref="textareaRef" rows="1" @input="adjustHeight"
-        @keydown.enter.exact.prevent="handleSend" @keydown.enter.shift.exact="userInput += '\n'"
-        :disabled="loading || !sessionId" placeholder="Ask something about the paper..."
-        class="flex-1 border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
-      <button @click="handleSend" :disabled="loading || !sessionId"
-        class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-indigo-700 disabled:bg-gray-400">
-        Send
-      </button>
+  <div class="mt-8 mb-10">
+    <div class="mb-4 flex items-center gap-2 px-1">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5 text-gray-500">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+      </svg>
+      <h3 class="font-medium text-gray-800">Q&A</h3>
     </div>
 
-    <div class="p-4 space-y-4 bg-gray-50/50">
-      <div v-if="isTyping" class="flex w-full mb-4 justify-start">
-        <div class="flex-shrink-0 mr-3 mt-1">
-          <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 shadow-sm border border-indigo-200">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+    <div class="sticky top-0 z-10 bg-white pb-6 pt-2">
+      <div class="relative flex items-end border border-gray-300 bg-white rounded-2xl shadow-sm focus-within:ring-1 focus-within:ring-gray-300 focus-within:border-gray-400 transition-all p-2">
+        <textarea 
+          v-model="userInput" 
+          ref="textareaRef" 
+          rows="1" 
+          @input="adjustHeight"
+          @keydown.enter.exact.prevent="handleSend" 
+          @keydown.enter.shift.exact="userInput += '\n'"
+          :disabled="loading || !sessionId" 
+          placeholder="Ask something about the paper..."
+          class="flex-1 max-h-48 bg-transparent border-0 focus:ring-0 resize-none px-2 py-1.5 text-sm text-gray-900 placeholder-gray-400 outline-none"
+        ></textarea>
+        <button 
+          @click="handleSend" 
+          :disabled="loading || !sessionId || !userInput.trim()"
+          class="flex-shrink-0 p-1.5 rounded-xl ml-2 transition-colors duration-200 flex items-center justify-center h-8 w-8"
+          :class="userInput.trim() ? 'bg-black text-white hover:bg-gray-800' : 'bg-gray-100 text-gray-400'"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+            <line x1="12" y1="19" x2="12" y2="5"></line>
+            <polyline points="5 12 12 5 19 12"></polyline>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="space-y-6 pt-2">
+      <div v-if="isTyping" class="flex w-full justify-start animate-pulse">
+        <div class="flex-shrink-0 mr-4 mt-0.5">
+          <div class="w-8 h-8 flex items-center justify-center text-black">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
           </div>
         </div>
-        <div class="flex flex-col max-w-[70%] items-start">
-          <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
-            <div class="flex space-x-1 py-1 px-1">
-              <div class="w-2 h-2 bg-gray-300 rounded-full animate-bounce"></div>
-              <div class="w-2 h-2 bg-gray-300 rounded-full animate-bounce [animation-delay:0.2s]"></div>
-              <div class="w-2 h-2 bg-gray-300 rounded-full animate-bounce [animation-delay:0.4s]"></div>
-            </div>
+        <div class="flex flex-col items-start pt-1.5">
+          <div class="flex space-x-1 py-1">
+            <div class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></div>
+            <div class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:0.2s]"></div>
+            <div class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:0.4s]"></div>
           </div>
         </div>
       </div>
 
-      <div v-for="(pair, groupIndex) in chatHistory" :key="groupIndex"
-        class="space-y-4 w-full border-b border-gray-100 pb-4">
+      <div v-for="(pair, groupIndex) in chatHistory" :key="groupIndex" class="space-y-6 w-full pb-6">
         <template v-for="(msg, msgIndex) in pair" :key="groupIndex + '-' + msgIndex">
-          <div :class="['flex w-full mb-2', msg.role === 'user' ? 'justify-end' : 'justify-start']">
-            
-            <div v-if="msg.role === 'assistant'" class="flex-shrink-0 mr-3 mt-1">
-              <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 shadow-sm border border-indigo-200">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          
+          <div v-if="msg.role === 'user'" class="flex w-full justify-end items-start gap-3">
+            <div class="bg-gray-100 border border-gray-200/60 text-gray-900 px-4 py-2.5 rounded-2xl rounded-tr-sm max-w-[80%] text-sm whitespace-pre-wrap leading-relaxed shadow-sm">
+              {{ msg.content }}
+            </div>
+            <div class="flex-shrink-0 mt-0.5">
+              <div class="w-8 h-8 bg-gray-900 rounded-full flex items-center justify-center text-white shadow-sm">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
                 </svg>
               </div>
             </div>
+          </div>
 
-            <div :class="['flex flex-col max-w-[70%]', msg.role === 'user' ? 'items-end' : 'items-start']">
-              <div v-if="msg.role === 'assistant'"
-                class="bg-white text-gray-800 border border-gray-100 p-3 rounded-lg text-sm shadow-sm w-full overflow-x-auto">
+          <div v-if="msg.role === 'assistant'" class="flex w-full justify-start group/msg items-start">
+            <div class="flex-shrink-0 mr-4 mt-0.5">
+              <div class="w-8 h-8 bg-white border border-gray-200 shadow-sm rounded-full flex items-center justify-center text-black">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+            </div>
+            <div class="flex flex-col flex-1 items-start min-w-0 pt-1">
+              <div class="text-gray-800 text-sm w-full overflow-x-auto leading-relaxed">
                 <div class="prose prose-sm max-w-none" v-html="renderMarkdown(msg.content)"></div>
               </div>
               
-              <div v-else class="bg-indigo-600 text-white p-3 rounded-lg text-sm shadow-sm whitespace-pre-wrap">
-                {{ msg.content }}
-              </div>
-
-              <div v-if="msg.role === 'assistant'" class="mt-1.5 ml-1">
-                <button @click="copyContent(msg.content)"
-                  class="flex items-center space-x-1 text-gray-400 hover:text-indigo-500 transition-colors duration-200 text-xs">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
-                    <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+              <div class="mt-2 ml-[-4px] opacity-0 group-hover/msg:opacity-100 transition-opacity">
+                <button @click="copyContent(msg.content)" class="flex items-center space-x-1 text-gray-400 hover:text-gray-700 p-1 rounded-md transition-colors" title="Copy to clipboard">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                   </svg>
-                  <span>Copy</span>
                 </button>
               </div>
             </div>
-
-            <div v-if="msg.role === 'user'" class="flex-shrink-0 ml-3 mt-1">
-              <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-gray-600 shadow-sm border border-gray-300">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
-                </svg>
-              </div>
-            </div>
-
           </div>
+
         </template>
       </div>
 
-      <div v-if="isLoadingMore" class="text-center py-4 text-xs text-gray-400 italic">
+      <div v-if="isLoadingMore" class="text-center py-4 text-xs text-gray-400">
         Loading historical messages...
       </div>
-      <div v-if="!hasMore" class="text-center py-4 text-xs text-gray-300">
-        End of conversation history.
+      <div v-if="!hasMore && chatHistory.length > 0" class="text-center py-4 text-xs text-gray-300">
+        · End of conversation ·
       </div>
     </div>
   </div>
@@ -109,22 +123,18 @@ const isLoadingMore = ref(false)
 
 const renderMarkdown = (content) => md.render(content)
 
-// 加载历史记录
 const loadHistory = async (isLoadMore = false) => {
   if (!props.sessionId || props.sessionId === 'new' || (!hasMore.value && isLoadMore)) return
-
   isLoadingMore.value = isLoadMore
   try {
     const res = await getSessionMessages(props.sessionId, currentPage.value)
     if (res.data.code === 1) {
-      // 假设后端返回的是 [user, assistant] 对，我们需要将其反转为 [assistant, user]
       const fetchedMessages = (res.data.data.messages || []).map(pair => {
-        return [pair[1], pair[0]] // 反转：让 assistant 在前
+        return [pair[1], pair[0]] 
       })
-
       hasMore.value = res.data.data.more
       if (isLoadMore) {
-        chatHistory.value.push(...fetchedMessages) // 向下滚动，追加到末尾
+        chatHistory.value.push(...fetchedMessages)
       } else {
         chatHistory.value = fetchedMessages
       }
@@ -134,7 +144,6 @@ const loadHistory = async (isLoadMore = false) => {
   }
 }
 
-// 暴露加载接口
 const loadMore = () => {
   if (!isLoadingMore.value && hasMore.value) {
     currentPage.value++
@@ -143,14 +152,14 @@ const loadMore = () => {
 }
 defineExpose({ loadMore })
 
-// 发送新消息：插入到最上方
 const handleSend = async () => {
   if (!userInput.value.trim() || isTyping.value) return
-
   const text = userInput.value
   userInput.value = ''
+  
+  const textarea = textareaRef.value
+  if (textarea) textarea.style.height = 'auto'
 
-  // 按照 [{assistant}, {user}] 格式插入到数组最前面
   const newPair = [
     { role: 'assistant', content: '...' },
     { role: 'user', content: text }
@@ -160,7 +169,6 @@ const handleSend = async () => {
 
   try {
     await chatWithPaper(text, props.sessionId, (chunk) => {
-      // 实时更新数组第一个元素的 assistant 内容
       if (chatHistory.value[0][0].content === '...') {
         chatHistory.value[0][0].content = ''
       }
@@ -187,7 +195,12 @@ const adjustHeight = () => {
   const textarea = textareaRef.value
   if (textarea) {
     textarea.style.height = 'auto'
-    textarea.style.height = `${textarea.scrollHeight}px`
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 150)}px`
   }
 }
 </script>
+
+<style scoped>
+.prose :deep(p) { margin-bottom: 0.75rem; margin-top: 0; }
+.prose :deep(p:last-child) { margin-bottom: 0; }
+</style>

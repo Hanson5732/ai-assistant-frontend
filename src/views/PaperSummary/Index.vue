@@ -1,14 +1,13 @@
 <template>
     <main 
-        class="h-screen flex-1 p-4 md:p-8 overflow-y-auto bg-gray-50" 
+        class="h-screen flex-1 p-4 md:p-8 overflow-y-auto bg-white" 
         @scroll="handleMainScroll"
     >
-        <div class="max-w-5xl mx-auto space-y-6">
+        <div class="max-w-4xl mx-auto space-y-8">
 
             <transition name="fade">
-                <div v-if="paperTitle"
-                    class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm border-l-4 border-l-indigo-600">
-                    <h1 class="text-2xl font-serif font-bold text-indigo-950 leading-tight">
+                <div v-if="paperTitle" class="pt-4 pb-2">
+                    <h1 class="text-2xl md:text-3xl font-semibold text-gray-900 leading-snug tracking-tight">
                         {{ paperTitle }}
                     </h1>
                 </div>
@@ -39,25 +38,19 @@ const rawSummary = ref('')
 const paperTitle = ref('')
 const selectedSize = ref('medium')
 
-// 加载/刷新数据的逻辑
 const loadData = async () => {
     const sId = route.params.sessionId
-
-    // 场景 A：新上传文件跳转
     if (sId === 'new' && history.state?.file) {
         selectedFile.value = history.state.file
         selectedSize.value = history.state.size || 'medium'
         handleGenerate()
         return
     }
-
-    // 场景 B：查询具体会话记录
     if (sId && sId !== 'new') {
         try {
             loading.value = true
             const res = await getSessionDetail(sId)
             if (res.data.code === 1) {
-                // 匹配你提供的后端结构
                 paperTitle.value = res.data.data.title
                 rawSummary.value = res.data.data.summary
                 sessionId.value = sId
@@ -71,21 +64,17 @@ const loadData = async () => {
     }
 }
 
-// 核心生成逻辑
 const handleGenerate = async () => {
     if (!selectedFile.value || loading.value) return
-
     loading.value = true
     rawSummary.value = ''
-    paperTitle.value = '' // 重置标题
-
+    paperTitle.value = ''
     try {
         await processPaper(
             selectedFile.value,
             selectedSize.value,
             '',
             (chunk) => {
-                // 1. 提取 Session ID
                 if (chunk.includes('SESSION_ID:')) {
                     const match = chunk.match(/SESSION_ID:([\w-]+)/)
                     if (match) {
@@ -95,18 +84,13 @@ const handleGenerate = async () => {
                     }
                     chunk = chunk.replace(/SESSION_ID:[\w-]+\n?/, '')
                 }
-
-                // 2. 提取 Title (流式输出时)
-                // 如果 chunk 中包含 "Title: "，将其截取到 paperTitle 中
                 if (chunk.includes('Title:')) {
                     const titleMatch = chunk.match(/Title:\s*(.*)/)
                     if (titleMatch) {
                         paperTitle.value = titleMatch[1].split('\n')[0]
-                        // 同时从摘要内容中移除这一行，保持 SummaryPanel 纯净
                         chunk = chunk.replace(/Title:.*\n?/, '')
                     }
                 }
-
                 rawSummary.value += chunk
             }
         )
@@ -124,12 +108,8 @@ const chatPanelRef = ref(null)
 
 const handleMainScroll = (e) => {
     const { scrollTop, clientHeight, scrollHeight } = e.target
-
-    // 增加容错值（例如 20px），防止因为像素舍入导致不触底
     const isAtBottom = scrollHeight - scrollTop <= clientHeight + 20
-
     if (isAtBottom) {
-        console.log('Detected bottom - triggering loadMore') // 调试用
         chatPanelRef.value?.loadMore()
     }
 }
@@ -140,7 +120,6 @@ const handleMainScroll = (e) => {
 .fade-leave-active {
     transition: opacity 0.5s ease;
 }
-
 .fade-enter-from,
 .fade-leave-to {
     opacity: 0;

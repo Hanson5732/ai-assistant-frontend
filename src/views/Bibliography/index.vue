@@ -1,97 +1,102 @@
 <template>
-  <div class="p-6 bg-white min-h-screen" v-loading="loading" element-loading-text="Processing...">
-    <div class="flex justify-between items-start mb-4">
-      <h2 class="text-2xl font-bold text-gray-800">My Bibliography Library</h2>
-      
+  <div class="p-6 bg-white min-h-screen text-gray-900" v-loading="loading" element-loading-text="Processing...">
+    <div class="flex justify-between items-start mb-6">
+      <h2 class="text-2xl font-semibold tracking-tight">My Bibliography</h2>
+
       <div class="flex items-center gap-2">
-        <div class="relative">
-          <input 
-            v-model="searchText" 
-            type="text" 
-            placeholder="Search by title..." 
-            class="w-64 pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-sm"
-            @keyup.enter="handleBasicSearch"
-          />
-          <button @click="handleBasicSearch" class="absolute right-3 top-2.5 text-gray-400 hover:text-indigo-600">
-            🔍
-          </button>
+        <div class="relative group">
+          <input v-model="searchText" type="text" placeholder="Search titles..."
+            class="w-64 pl-10 pr-4 py-2 bg-gray-50 border border-gray-200/60 rounded-xl focus:bg-white focus:ring-1 focus:ring-gray-300 focus:border-gray-400 outline-none transition-all text-sm"
+            @keyup.enter="handleBasicSearch" />
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            class="w-4 h-4 text-gray-400 absolute left-3 top-3">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
         </div>
-        <button 
-          @click="handleBasicSearch"
-          class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium shadow-sm"
-        >
+        <button @click="handleBasicSearch"
+          class="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors text-sm font-medium">
           Search
         </button>
-        <button 
-          @click="deepSearchDialogVisible = true"
-          class="px-4 py-2 bg-gray-100 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium shadow-sm"
-        >
-          Deep Search
+        <button @click="deepSearchDialogVisible = true"
+          class="px-4 py-2 text-gray-600 hover:text-black transition-colors text-sm font-medium flex items-center gap-1">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4">
+            <path d="M4 6h16M4 12h16M4 18h7" />
+          </svg>
+          Deep
         </button>
-        <button 
-          v-if="isSearchMode" 
-          @click="clearSearch"
-          class="text-xs text-red-500 hover:underline"
-        >
-          Clear Results
+        <button v-if="isSearchMode" @click="clearSearch"
+          class="text-xs text-red-500 hover:text-red-700 font-medium ml-2">
+          Clear
         </button>
       </div>
     </div>
 
     <div class="flex justify-start items-center gap-3 mb-8">
       <button v-if="!isSelectMode" @click="isSelectMode = true"
-        class="multi-select-mode-1 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors shadow-md text-sm">
+        class="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors text-sm font-medium">
         Select Files
       </button>
 
       <template v-else>
         <button @click="openFolderDialog" :disabled="selectedIds.length === 0"
-          class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors shadow-md disabled:opacity-50 flex items-center gap-2 text-sm">
-          <span>📁</span> Add to Folder ({{ selectedIds.length }})
+          class="px-4 py-2 bg-gray-800 text-white rounded-xl hover:bg-black transition-colors disabled:opacity-50 flex items-center gap-2 text-sm">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4">
+            <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+          </svg>
+          Add to Folder ({{ selectedIds.length }})
         </button>
         <button @click="handleBatchDelete" :disabled="selectedIds.length === 0"
-          class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors shadow-md disabled:opacity-50 text-sm">
+          class="px-4 py-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors disabled:opacity-50 text-sm font-medium">
           Delete ({{ selectedIds.length }})
         </button>
-        <button @click="exitSelectMode"
-          class="px-4 py-2 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-100 transition-colors text-sm">
+        <button @click="exitSelectMode" class="px-4 py-2 text-gray-500 hover:text-gray-800 text-sm transition-colors">
           Cancel
         </button>
       </template>
 
       <button v-if="!isSelectMode" @click="triggerFileSelect"
-        class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors shadow-md flex items-center gap-2 text-sm">
-        <span>+</span> Upload File(s)
+        class="px-4 py-2 bg-black text-white rounded-xl hover:bg-gray-800 transition-colors flex items-center gap-2 text-sm font-medium">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        Upload
       </button>
       <input type="file" ref="fileInput" class="hidden" @change="onFileSelected" accept=".pdf" />
     </div>
 
     <div v-if="bibliographyList.length > 0" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
       <div v-for="item in bibliographyList" :key="item.id"
-        class="border-2 rounded-xl p-4 transition-all bg-gray-50 flex flex-col justify-between group relative" :class="[
-          selectedIds.includes(item.id) ? 'border-indigo-500 ring-2 ring-indigo-200' : 'border-indigo-100',
-          !isSelectMode ? 'hover:shadow-lg' : ''
+        class="group bg-white border rounded-2xl p-5 flex flex-col justify-between relative transition-all duration-200"
+        :class="[
+          selectedIds.includes(item.id) ? 'border-gray-900 ring-1 ring-gray-900 bg-gray-50' : 'border-gray-200/60 hover:border-gray-300 hover:shadow-sm'
         ]">
-        <div v-if="isSelectMode" class="absolute top-3 right-3 z-10">
+
+        <div v-if="isSelectMode" class="absolute top-4 right-4 z-10">
           <input type="checkbox" :value="item.id" v-model="selectedIds"
-            class="w-5 h-5 text-indigo-600 rounded cursor-pointer" />
+            class="w-4 h-4 text-black border-gray-300 rounded focus:ring-black cursor-pointer" />
         </div>
 
         <div @click="!isSelectMode && goToDetail(item.id)" :class="!isSelectMode ? 'cursor-pointer' : 'cursor-default'">
-          <div class="text-indigo-600 mb-3">
-            <span class="text-3xl">📄</span>
+          <div class="mb-4 text-gray-400 group-hover:text-black transition-colors">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-8 h-8">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z">
+              </path>
+            </svg>
           </div>
-          <h3 class="font-semibold text-gray-800 text-sm line-clamp-2 mb-2"
-            :class="!isSelectMode && 'group-hover:text-indigo-600'">
-            {{ item.title || 'Unknown Title' }}
+          <h3 class="font-semibold text-gray-900 text-sm line-clamp-2 mb-2 leading-relaxed" :title="item.title">
+            {{ item.title || 'Untitled Document' }}
           </h3>
-          <p class="text-gray-500 text-[11px] mb-1">Author: {{ item.author || (item.authors ? item.authors.join(', ') : 'Unknown') }}</p>
-          <p class="text-gray-400 text-[10px]">Publication Date: {{ item.publish_date || item.pub_year || 'N/A' }}</p>
+          <p class="text-gray-500 text-xs mb-1 truncate">{{ item.author || (item.authors ? item.authors.join(', ') :
+            'Unknown Author') }}</p>
+          <p class="text-gray-400 text-[11px]">{{ item.publish_date || item.pub_year || 'N/A' }}</p>
         </div>
 
-        <div class="mt-4 pt-3 border-t border-gray-200 flex justify-between items-center">
-          <span class="text-[10px] bg-indigo-50 text-indigo-700 px-2 py-1 rounded">PDF</span>
-          <button v-if="!isSelectMode" class="text-xs text-gray-400 hover:text-red-500"
+        <div
+          class="mt-5 pt-4 border-t border-gray-100 flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity">
+          <span class="text-[10px] uppercase tracking-wider font-semibold text-gray-400">PDF</span>
+          <button v-if="!isSelectMode" class="text-xs font-medium text-gray-400 hover:text-red-600 transition-colors"
             @click.stop="handleDelete(item.id)">
             Delete
           </button>
@@ -99,56 +104,72 @@
       </div>
     </div>
 
-    <div v-else class="text-center py-20 bg-gray-50 rounded-2xl border border-dashed border-gray-300">
-      <span class="text-4xl block mb-3">📭</span>
-      <h3 class="text-lg font-medium text-gray-900 mb-1">No bibliographies found</h3>
-      <p class="text-gray-500 text-sm">Try adjusting your search or upload new files.</p>
+    <div v-else class="text-center py-24 bg-gray-50/50 rounded-3xl border border-dashed border-gray-200">
+      <div class="flex justify-center mb-4 text-gray-300">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-12 h-12">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4">
+          </path>
+        </svg>
+      </div>
+      <h3 class="text-sm font-medium text-gray-900 mb-1">No documents found</h3>
+      <p class="text-gray-500 text-xs">Upload new files to start your library.</p>
     </div>
 
-    <div class="mt-10 flex justify-center" v-if="!isSearchMode">
+    <div class="mt-8 flex justify-center" v-if="!isSearchMode && totalCount > 0">
       <el-pagination v-model:current-page="currentPage" :page-size="8" :total="totalCount" layout="prev, pager, next"
         background @current-change="handlePageChange" />
     </div>
 
-    <el-dialog v-model="deepSearchDialogVisible" title="Deep Search Bibliography" width="600px" @closed="resetDeepSearchFilters">
+    <el-dialog v-model="deepSearchDialogVisible" title="Deep Search Bibliography" width="600px"
+      @closed="resetDeepSearchFilters">
       <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-4">
         <div class="flex items-start gap-3">
-          <input type="checkbox" v-model="deepFilters.title.enabled" class="mt-2 w-4 h-4 text-indigo-600 rounded cursor-pointer" />
+          <input type="checkbox" v-model="deepFilters.title.enabled"
+            class="mt-2 w-4 h-4 text-indigo-600 rounded cursor-pointer" />
           <div class="flex-1">
             <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Title</label>
-            <textarea v-model="deepFilters.title.value" :disabled="!deepFilters.title.enabled" rows="2" placeholder="Enter paper title..."
-                class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none resize-none disabled:bg-gray-100 disabled:text-gray-400 transition-colors"></textarea>
+            <textarea v-model="deepFilters.title.value" :disabled="!deepFilters.title.enabled" rows="2"
+              placeholder="Enter paper title..."
+              class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none resize-none disabled:bg-gray-100 disabled:text-gray-400 transition-colors"></textarea>
           </div>
         </div>
         <div class="flex items-center gap-3">
-          <input type="checkbox" v-model="deepFilters.author.enabled" class="w-4 h-4 text-indigo-600 rounded cursor-pointer" />
+          <input type="checkbox" v-model="deepFilters.author.enabled"
+            class="w-4 h-4 text-indigo-600 rounded cursor-pointer" />
           <div class="flex-1">
             <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Author</label>
-            <input v-model="deepFilters.author.value" :disabled="!deepFilters.author.enabled" type="text" placeholder="e.g. John Doe"
-                class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none disabled:bg-gray-100 transition-colors" />
+            <input v-model="deepFilters.author.value" :disabled="!deepFilters.author.enabled" type="text"
+              placeholder="e.g. John Doe"
+              class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none disabled:bg-gray-100 transition-colors" />
           </div>
         </div>
         <div class="flex gap-4">
           <div class="flex items-center gap-3 flex-1">
-            <input type="checkbox" v-model="deepFilters.venue.enabled" class="w-4 h-4 text-indigo-600 rounded cursor-pointer" />
+            <input type="checkbox" v-model="deepFilters.venue.enabled"
+              class="w-4 h-4 text-indigo-600 rounded cursor-pointer" />
             <div class="flex-1">
               <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Venue</label>
-              <input v-model="deepFilters.venue.value" :disabled="!deepFilters.venue.enabled" type="text" placeholder="e.g. CVPR"
-                  class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none disabled:bg-gray-100 transition-colors" />
+              <input v-model="deepFilters.venue.value" :disabled="!deepFilters.venue.enabled" type="text"
+                placeholder="e.g. CVPR"
+                class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none disabled:bg-gray-100 transition-colors" />
             </div>
           </div>
           <div class="flex items-center gap-3 flex-1">
-            <input type="checkbox" v-model="deepFilters.year.enabled" class="w-4 h-4 text-indigo-600 rounded cursor-pointer" />
+            <input type="checkbox" v-model="deepFilters.year.enabled"
+              class="w-4 h-4 text-indigo-600 rounded cursor-pointer" />
             <div class="flex-1">
               <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Year Range</label>
               <div class="flex items-center gap-2">
-                <select v-model="deepFilters.year.start" :disabled="!deepFilters.year.enabled" class="w-full border border-gray-300 rounded-lg p-1 text-sm disabled:bg-gray-100">
+                <select v-model="deepFilters.year.start" :disabled="!deepFilters.year.enabled"
+                  class="w-full border border-gray-300 rounded-lg p-1 text-sm disabled:bg-gray-100">
                   <option value="">Start</option>
-                  <option v-for="y in yearOptions" :key="'s-'+y" :value="y">{{ y }}</option>
+                  <option v-for="y in yearOptions" :key="'s-' + y" :value="y">{{ y }}</option>
                 </select>
-                <select v-model="deepFilters.year.end" :disabled="!deepFilters.year.enabled" class="w-full border border-gray-300 rounded-lg p-1 text-sm disabled:bg-gray-100">
+                <select v-model="deepFilters.year.end" :disabled="!deepFilters.year.enabled"
+                  class="w-full border border-gray-300 rounded-lg p-1 text-sm disabled:bg-gray-100">
                   <option value="">End</option>
-                  <option v-for="y in yearOptions" :key="'e-'+y" :value="y">{{ y }}</option>
+                  <option v-for="y in yearOptions" :key="'e-' + y" :value="y">{{ y }}</option>
                 </select>
               </div>
             </div>
@@ -162,28 +183,28 @@
     </el-dialog>
 
     <el-dialog v-model="uploadDialogVisible" title="Confirm uploading files" width="500px">
-        <template #footer>
-          <el-button @click="cancelUpload">Cancel</el-button>
-          <el-button type="primary" @click="confirmAndUpload" :disabled="pendingFiles.length === 0">Upload</el-button>
-        </template>
+      <template #footer>
+        <el-button @click="cancelUpload">Cancel</el-button>
+        <el-button type="primary" @click="confirmAndUpload" :disabled="pendingFiles.length === 0">Upload</el-button>
+      </template>
     </el-dialog>
 
     <el-dialog v-model="deleteDialogVisible" title="Delete Confirmation" width="400px" @closed="resetDeleteState">
-        <template #footer>
-          <span class="dialog-footer">
-            <el-button @click="deleteDialogVisible = false">Cancel</el-button>
-            <el-button type="danger" :disabled="!hasConfirmed" @click="confirmDeleteAction">Delete</el-button>
-          </span>
-        </template>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="deleteDialogVisible = false">Cancel</el-button>
+          <el-button type="danger" :disabled="!hasConfirmed" @click="confirmDeleteAction">Delete</el-button>
+        </span>
+      </template>
     </el-dialog>
 
     <el-dialog v-model="folderDialogVisible" title="Add to Folder" width="400px">
-        <template #footer>
-          <el-button @click="folderDialogVisible = false">Cancel</el-button>
-          <el-button type="primary" :disabled="!selectedFolderId || isAddingToFolder" @click="confirmAddToFolder">
-            {{ isAddingToFolder ? 'Adding...' : 'Confirm' }}
-          </el-button>
-        </template>
+      <template #footer>
+        <el-button @click="folderDialogVisible = false">Cancel</el-button>
+        <el-button type="primary" :disabled="!selectedFolderId || isAddingToFolder" @click="confirmAddToFolder">
+          {{ isAddingToFolder ? 'Adding...' : 'Confirm' }}
+        </el-button>
+      </template>
     </el-dialog>
   </div>
 </template>
@@ -241,7 +262,7 @@ const handleBasicSearch = async () => {
   if (!searchText.value.trim()) {
     return clearSearch()
   }
-  
+
   loading.value = true
   try {
     const res = await searchBibliography({ title: searchText.value.trim() })
@@ -249,7 +270,7 @@ const handleBasicSearch = async () => {
       bibliographyList.value = res.data.data
       isSearchMode.value = true
       // Note: Backend search currently returns all matches without pagination
-      totalCount.value = res.data.data.length 
+      totalCount.value = res.data.data.length
     }
   } catch (error) {
     ElMessage.error('Search failed')
