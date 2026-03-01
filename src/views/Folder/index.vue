@@ -6,6 +6,9 @@
                     <h1 class="text-3xl font-bold text-gray-900 mb-2">My Folders</h1>
                     <p class="text-gray-500 text-sm">Organize your papers into different collections.</p>
                 </div>
+            </div>
+
+            <div class="flex items-center justify-start mb-8">
                 <button @click="showCreateModal = true"
                     class="px-5 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-xl hover:bg-indigo-700 transition-colors shadow-sm flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -70,7 +73,7 @@
 
         <div v-if="showCreateModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
             <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 animate-fade-in">
-                <h2 class="text-xl font-bold text-gray-800 mb-4">Create New Folder</h2>
+                <h2 class="text-xl font-bold text-gray-800 mb-4">Create New Foldaer</h2>
                 <div class="mb-6">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Folder Name</label>
                     <input v-model="newFolderName" @keyup.enter="submitCreate" type="text" placeholder="e.g. Deep Learning Papers"
