@@ -18,7 +18,7 @@
       <div>
         <button 
           @click="toggleSubMenu"
-          class="w-full flex items-center p-3 text-gray-700 hover:bg-white hover:shadow-sm rounded-lg transition-all group"
+          class="nav-paper-summary w-full flex items-center p-3 text-gray-700 hover:bg-white hover:shadow-sm rounded-lg transition-all group"
           :class="[isCollapsed ? 'justify-center' : 'justify-between']"
         >
           <div class="flex items-center gap-3">
@@ -31,7 +31,7 @@
         <div v-if="!isCollapsed && isSubMenuOpen" class="mt-1 ml-4 border-l border-gray-200 pl-2 space-y-1">
           <button 
             @click="handleNewChat" 
-            class="w-full text-left p-2 text-xs font-semibold text-indigo-600 hover:bg-indigo-50 rounded-md mb-2"
+            class="nav-new-chat w-full text-left p-2 text-xs font-semibold text-indigo-600 hover:bg-indigo-50 rounded-md mb-2"
           >
             + New Chat
           </button>
@@ -64,7 +64,7 @@
 
       <router-link 
         to="/bibliography"
-        class="flex items-center p-3 text-gray-700 hover:bg-white hover:shadow-sm rounded-lg transition-all group"
+        class="nav-bibliography flex items-center p-3 text-gray-700 hover:bg-white hover:shadow-sm rounded-lg transition-all group"
         :class="[isCollapsed ? 'justify-center' : '']"
       >
         <div class="flex items-center gap-3">
@@ -74,7 +74,7 @@
       </router-link>
       <router-link 
         to="/folder"
-        class="flex items-center p-3 text-gray-700 hover:bg-white hover:shadow-sm rounded-lg transition-all group"
+        class="nav-folder flex items-center p-3 text-gray-700 hover:bg-white hover:shadow-sm rounded-lg transition-all group"
         :class="[isCollapsed ? 'justify-center' : '']"
       >
         <div class="flex items-center gap-3">
@@ -84,6 +84,16 @@
       </router-link>
 
     </nav>
+
+    <div class="p-4 border-t">
+      <button 
+        @click="handleManualGuide"
+        class="flex items-center text-gray-500 hover:text-blue-600 transition"
+      >
+        <span class="mr-2">❓</span>
+        <span>Help</span>
+      </button>
+    </div>
   </aside>
 </template>
 
@@ -92,11 +102,32 @@ import { ref, onMounted, watch } from 'vue'
 import { getSessions, deleteSession } from '@/apis/sidebar'
 import { useRoute } from 'vue-router'
 import { ElMessageBox, ElMessage } from 'element-plus'
+import { useGuide } from '@/utils/guide';
+
+const { startGuide } = useGuide();
 
 const isCollapsed = ref(false)
 const isSubMenuOpen = ref(true)
 const history = ref([])
 const route = useRoute()
+
+const handleManualGuide = () => {
+  startGuide();
+};
+
+onMounted(() => {
+  // 检查是否是第一次进入
+  const hasGuided = localStorage.getItem('has_completed_guide');
+  
+  if (!hasGuided) {
+    // 延迟一点点触发，确保 DOM 渲染完成
+    setTimeout(() => {
+      startGuide();
+      // 记录已引导
+      localStorage.setItem('has_completed_guide', 'true');
+    }, 500);
+  }
+});
 
 const loadHistoryList = async () => {
   try {

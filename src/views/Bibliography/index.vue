@@ -4,7 +4,7 @@
       <h2 class="text-2xl font-bold text-gray-800">My Bibliography Library</h2>
       <div class="flex gap-3">
         <button v-if="!isSelectMode" @click="isSelectMode = true"
-          class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors shadow-md">
+          class="multi-select-mode-1 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors shadow-md">
           Select Files
         </button>
 

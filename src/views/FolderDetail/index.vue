@@ -11,7 +11,7 @@
                 <div class="flex items-center gap-3">
                     <template v-if="!isSelectMode">
                         <button @click="isSelectMode = true" v-if="papers.length > 0"
-                            class="px-4 py-2 bg-gray-600 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition-colors shadow-sm">
+                            class="multi-select-mode-2 px-4 py-2 bg-gray-600 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition-colors shadow-sm">
                             Select Papers
                         </button>
                         <button @click="openAddPaperModal"
